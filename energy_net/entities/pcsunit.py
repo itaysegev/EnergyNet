@@ -39,10 +39,11 @@ class PCSUnit(CompositeNetworkEntity):
     def perform_joint_action(self, actions:dict[str, EnergyAction]):
         super().step(actions)
 
-    def step(self, action: StorageAction):
+    def step(self, action: Union[np.ndarray, StorageAction]):
         # storage action
+        action = StorageAction.from_numpy(action) if type(action) == np.ndarray else action
         current_storage = action['charge']
-        current_consumption = self._state['consumption']
+        current_consumption = self._state['curr_consumption']
         # this is how much we buy/sell to the grid
         pg = current_consumption+current_storage
 

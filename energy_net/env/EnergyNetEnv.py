@@ -61,7 +61,7 @@ class EnergyNetEnv(ParallelEnv, Environment):
         self.agents = []
         
         # set reward function
-        self.reward_function = reward_function if reward_function is not None else DefaultPCSUnitRewardFunction(env_metadata=self.get_metadata)
+        self.reward_function = reward_function(env_metadata=self.get_metadata) if reward_function is not None else DefaultPCSUnitRewardFunction(env_metadata=self.get_metadata)
        
         # reset environment and initializes episode time steps
         self.reset()
@@ -124,6 +124,7 @@ class EnergyNetEnv(ParallelEnv, Environment):
             #s
             curr_state = self.entities[agent_name].get_current_state()
             # NEW TIME TICK
+
             self.entities[agent_name].step(actions)
             #s'
             next_state = self.entities[agent_name].get_current_state()    
