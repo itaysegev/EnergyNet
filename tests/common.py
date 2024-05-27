@@ -4,19 +4,19 @@ from pathlib import Path
 from typing import List
 
 from energy_net.entities.params import StorageParams, ProductionParams, ConsumptionParams
-from energy_net.entities.household import Household
-from energy_net.dynamics.consumption_dynamics import HouseholdConsumptionDynamics
+from energy_net.entities.pcsunit import PCSUnit
+from energy_net.dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
 from energy_net.network_entity import NetworkEntity
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 from energy_net.dynamics.storage_dynamics import BatteryDynamics
 from energy_net.dynamics.production_dynamics import PVDynamics
 
-def default_household():
+def example_pcsunit():
     # initialize consumer devices
         consumption_params_arr=[]
-        consumption_params = ConsumptionParams(name='household_consumption', energy_dynamics=HouseholdConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=PCSUnitConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
         consumption_params_arr.append(consumption_params)
-        consumption_params_dict = {'household_consumption': consumption_params}
+        consumption_params_dict = {'pcsunit_consumption': consumption_params}
 
         # initialize storage devices
         storage_params_arr=[]
@@ -30,24 +30,24 @@ def default_household():
         production_params_arr.append(production_params)
         production_params_dict = {'test_pv': production_params}
 
-        # initilaize household
-        return Household(name="test_household", consumption_params_dict=consumption_params_dict, storage_params_dict=storage_params_dict, production_params_dict=production_params_dict, agg_func= None)
+        # initilaize pcsunit
+        return PCSUnit(name="test_pcsunit", consumption_params_dict=consumption_params_dict, storage_params_dict=storage_params_dict, production_params_dict=production_params_dict, agg_func= None)
 
 
 def default_network_entities() -> List[NetworkEntity]:
-        household = default_household()
-        return [household]
+        pcsunit = example_pcsunit()
+        return [pcsunit]
 
 ENV_CFG_FILE = Path(__file__).parent / 'test_env_configs.json'
 
 
-def get_test_env_cfgs():
+def get_env_cfgs():
     with open(ENV_CFG_FILE, 'r') as f:
         env_cfgs = json.load(f)
-    env_cfgs['single_entity_simple']['network_entities'] = default_network_entities()
+    #env_cfgs['single_entity_simple']['network_entities'] = default_network_entities()
     return env_cfgs
 
 
-test_env_cfgs = get_test_env_cfgs()
+test_env_cfgs = get_env_cfgs()
 
 single_agent_cfgs = {k: cfg for k, cfg in test_env_cfgs.items() if 'network_entities' not in cfg or len(cfg['network_entities']) == 1}

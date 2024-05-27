@@ -41,7 +41,7 @@ class ElectricHeaterDynamics(ConsumptionDynamics):
 
 
 
-class HouseholdConsumptionDynamics(ConsumptionDynamics):
+class PCSUnitConsumptionDynamics(ConsumptionDynamics):
     def __init__(self) -> None:
         super().__init__()
 

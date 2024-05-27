@@ -16,7 +16,7 @@ from stable_baselines3 import SAC
 import matplotlib.pyplot as plt
 import numpy as np
 
-class HouseholdDummyRewardFunction(RewardFunction):
+class pcsunitDummyRewardFunction(RewardFunction):
     r"""Dummy reward function class.
 
     Parameters
@@ -62,7 +62,7 @@ def test_gym_api():
             print(obs, "reset")
             # observation, info = env.reset()
             for _ in range(4):
-                # action = StorageAction(charge=env.action_space.sample().item())  # agent policy that uses the observation and info
+                # action = StorageAction(charge=env.action_space.sample().item())  # agents policy that uses the observation and info
                 # action, _ = model.predict(obs, deterministic=True)
                 action = env.action_space.sample()
                 print(action, "action")

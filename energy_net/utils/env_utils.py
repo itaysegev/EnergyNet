@@ -13,8 +13,8 @@ from ..dynamics.storage_dynamics import BatteryDynamics
 from ..entities.local_producer import PrivateProducer
 from ..dynamics.production_dynamics import PVDynamics
 from ..entities.consumer_device import ConsumerDevice
-from ..dynamics.consumption_dynamics import HouseholdConsumptionDynamics
-from ..entities.household import Household
+from ..dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
+from ..entities.pcsunit import PCSUnit
 from ..model.reward import RewardFunction
 
 
@@ -22,14 +22,14 @@ from ..model.reward import RewardFunction
 
 def observation_seperator(observation:dict[str, np.ndarray]):
     """
-    Seperates the observation into the agent's observation.
+    Seperates the observation into the agents's observation.
 
     Parameters:
     observation (dict): The observation of all agents.
-    agent (str): The agent to get the observation for.
+    agents (str): The agents to get the observation for.
 
     Returns:
-    dict: The observation of the agent.
+    dict: The observation of the agents.
     """
 
     return [observation[name] for name in observation.keys()]
@@ -44,12 +44,12 @@ def bounds_to_gym_box(bounds: Bounds) -> Box:
     )
 
 
-def default_household():
+def default_pcsunit():
     # initialize consumer devices
         consumption_params_arr=[]
-        consumption_params = ConsumptionParams(name='household_consumption', energy_dynamics=HouseholdConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=PCSUnitConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
         consumption_params_arr.append(consumption_params)
-        consumption_params_dict = {'household_consumption': consumption_params}
+        consumption_params_dict = {'pcsunit_consumption': consumption_params}
 
         # initialize storage devices
         storage_params_arr=[]
@@ -63,13 +63,13 @@ def default_household():
         production_params_arr.append(production_params)
         production_params_dict = {'test_pv': production_params}
 
-        # initilaize household
-        return Household(name="test_household", consumption_params_dict=consumption_params_dict, storage_params_dict=storage_params_dict, production_params_dict=production_params_dict, agg_func= None)
+        # initilaize pcsunit
+        return PCSUnit(name="test_pcsunit", consumption_params_dict=consumption_params_dict, storage_params_dict=storage_params_dict, production_params_dict=production_params_dict, agg_func= None)
 
 
 def default_network_entities() -> List[NetworkEntity]:
-        household = default_household()
-        return [household]
+        pcsunit = default_pcsunit()
+        return [pcsunit]
 
 
 

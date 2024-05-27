@@ -1,41 +1,20 @@
-from typing import Any, List, Union, Mapping
 from functools import lru_cache
 from pathlib import Path
-from gymnasium.utils import seeding
-from pettingzoo import ParallelEnv
+from typing import Any, List, Union
+
 import numpy as np
 from gymnasium.spaces import Box, Dict
+from gymnasium.utils import seeding
+from pettingzoo import ParallelEnv
 
+from ..config import DEFAULT_TIME_STEP
 from ..defs import Bounds
-from ..network_entity import NetworkEntity
+from ..entities.pcsunit import DefaultPCSUnitRewardFunction
+from ..env.base import Environment, EpisodeTracker
 from ..model.action import EnergyAction
 from ..model.reward import RewardFunction
-from ..config import DEFAULT_TIME_STEP
-from ..env.base import Environment, EpisodeTracker
+from ..network_entity import NetworkEntity
 from ..utils.env_utils import bounds_to_gym_box
-
-
-class DefaultHouseholdRewardFunction(RewardFunction):
-    """Dummy reward function class.
-
-    Parameters
-    ----------
-    env_metadata: Mapping[str, Any]:
-        General static information about the environment.
-    **kwargs : dict
-        Other keyword arguments for custom reward calculation.
-    """
-
-    def __init__(self, env_metadata: Mapping[str, Any], **kwargs):
-        super().__init__(env_metadata, **kwargs)
-
-    def calculate(self, curr_state, action, next_state, **kwargs) -> float:
-        # production = curr_state['curr_consumption'] + action.item()
-        # time_steps = kwargs.get('time_steps', None)
-        # assert time_steps is not None
-        # return  -1 * (production if time_steps  == 0 else 2 * production)
-        return -1 * action.item()
-
 
 
 class EnergyNetEnv(ParallelEnv, Environment):
@@ -82,7 +61,7 @@ class EnergyNetEnv(ParallelEnv, Environment):
         self.agents = []
         
         # set reward function
-        self.reward_function = reward_function if reward_function is not None else DefaultHouseholdRewardFunction(env_metadata=self.get_metadata)
+        self.reward_function = reward_function if reward_function is not None else DefaultPCSUnitRewardFunction(env_metadata=self.get_metadata)
        
         # reset environment and initializes episode time steps
         self.reset()
@@ -136,28 +115,21 @@ class EnergyNetEnv(ParallelEnv, Environment):
 
     def step(self, joint_action: dict[str, Union[np.ndarray, EnergyAction]]):
 
+        # init array of rewards and termination flag per agent
         rewards = {a: 0 for a in self.agents}
         terminations = {a: False for a in self.agents}
 
         # Perform the actions
         for agent_name, actions in joint_action.items():
+            #s
             curr_state = self.entities[agent_name].get_current_state()
+            # NEW TIME TICK
             self.entities[agent_name].step(actions)
+            #s'
             next_state = self.entities[agent_name].get_current_state()    
+            #r
             rewards[agent_name] = self.reward_function.calculate(curr_state, actions, next_state, time_steps=self.time_step)
-            
 
-
-        
-       
-        
-        
-        
-        # # Get the rewards
-        # for agent in self.agents:
-        #     rewards[agent] = self.reward_function.calculate(self.entities[agent].get_current_state())
-        
-           
         # get new observations according to the current state
         obs = self.__observe_all()
         self.__action_space = self.get_action_space()
@@ -170,12 +142,9 @@ class EnergyNetEnv(ParallelEnv, Environment):
             self.agents = []
 
         self.next_time_step()
-        
-        
-        # print(terminations, "terminations")
-        return obs, rewards, terminations, truncs, infos  
-        # return obs, rewards, self.terminated, truncs, self.get_info() 
-    
+
+        return obs, rewards, terminations, truncs, infos
+
     '''
 
     @abstractmethod
@@ -234,11 +203,11 @@ class EnergyNetEnv(ParallelEnv, Environment):
 
     def observe_all(self):
         """
-        gets all agent observations for the given state.
+        gets all agents observations for the given state.
         This is an API exposure of an inner method.
 
         Returns:
-            a dictionary for all agent observations.
+            a dictionary for all agents observations.
         """
         return self.__observe_all()
     
@@ -260,7 +229,7 @@ class EnergyNetEnv(ParallelEnv, Environment):
     def get_action_space(self):
         return {name: bounds_to_gym_box(entity.get_action_space()) for name, entity in self.entities.items()}
 
-    
+
 
     @property
     def episode_rewards(self):
@@ -272,7 +241,7 @@ class EnergyNetEnv(ParallelEnv, Environment):
     
     @property
     def rewards(self):
-        """reward time series for each agent"""
+        """reward time series for each agents"""
         return self.__rewards
     
     @rewards.setter

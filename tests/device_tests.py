@@ -12,7 +12,7 @@ from entities.private_producer import PrivateProducer
 from dynamics.production_dynmaics import PVDynamics
 from entities.local_consumer import ConsumerDevice
 from dynamics.consumption_dynamic import ElectricHeaterDynamics
-from entities.household import HouseHold
+from entities.pcsunit import pcsunit
 import numpy as np
 
 from env.EnergyNetEnv import EnergyNetEnv
@@ -62,16 +62,16 @@ class TestConsumer(unittest.TestCase):
         self.heater.step(np.array([100]))
         self.assertEqual(self.heater.max_electric_power, 90)
 
-class TestHouseHold(unittest.TestCase):
+class Testpcsunit(unittest.TestCase):
     def setUp(self):
         self.battery = Battery(capacity=100, efficiency=0.9, energy_dynamics=BatteryDynamics(), name='test_battery')
         self.pv = PrivateProducer(max_produce=100, efficiency=0.9, energy_dynamics=PVDynamics(), name='test_pv')
         self.load = ConsumerDevice(efficiency=0.9, max_electric_power=100, energy_dynamics=ElectricHeaterDynamics(), name='test_heater')
-        self.household = HouseHold(name='test_household', sub_entities=[self.battery, self.pv, self.load], agg_func=lambda x: x)
+        self.pcsunit = pcsunit(name='test_pcsunit', sub_entities=[self.battery, self.pv, self.load], agg_func=lambda x: x)
 
     def test_step(self):
-        self.household.step({'test_battery': np.array([90]), 'test_heater': np.array([10]), 'test_pv': np.array([100])})
-        self.assertEqual(self.household.sub_entities['test_battery'].state_of_charge, 90)
+        self.pcsunit.step({'test_battery': np.array([90]), 'test_heater': np.array([10]), 'test_pv': np.array([100])})
+        self.assertEqual(self.pcsunit.sub_entities['test_battery'].state_of_charge, 90)
 
 
 

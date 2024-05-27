@@ -89,3 +89,15 @@ def plot_data(data, title):
 
     # Show the plot
     plt.show()
+
+
+def plot(train_rewards, eval_rewards):
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_rewards, label='Training Rewards')
+    plt.plot(eval_rewards, label='Evaluation Rewards')
+    plt.xlabel('Episode')
+    plt.ylabel('Reward')
+    plt.title('Training and Evaluation Rewards')
+    plt.legend()
+    plt.show()
+

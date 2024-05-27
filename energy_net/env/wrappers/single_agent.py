@@ -6,7 +6,7 @@ from pettingzoo.utils.wrappers import BaseParallelWrapper
 
 class SingleAgentParallelEnvToGymWrapper(BaseParallelWrapper, gym.Env):
     """
-    A wrapper for single-agent parallel environments aligning the environments'
+    A wrapper for single-agents parallel environments aligning the environments'
     API with OpenAI Gym.
     """
     # gym API class variables
@@ -16,7 +16,7 @@ class SingleAgentParallelEnvToGymWrapper(BaseParallelWrapper, gym.Env):
     def __init__(self, env):
         super().__init__(env)
 
-        # assert single agent environment
+        # assert single agents environment
         assert len(env.possible_agents) == 1
 
     
@@ -41,7 +41,7 @@ class SingleAgentParallelEnvToGymWrapper(BaseParallelWrapper, gym.Env):
             infos = {k: {} for k in obs.keys()}
 
         # return the single entry value as is.
-        # no need for the key (only one agent)
+        # no need for the key (only one agents)
         return next(iter(obs.values())), next(iter(infos.values()))
 
     def step(self, action):
@@ -53,12 +53,12 @@ class SingleAgentParallelEnvToGymWrapper(BaseParallelWrapper, gym.Env):
 
     @property  # make property for gym-like access
     def action_space(self, _=None):  # ignore second argument in API
-        # get action space of the single agent            
+        # get action space of the single agents
         return self._flatten_action_space(self.env.action_space(self.env.possible_agents[0]))
 
     @property  # make property for gym-like access
     def observation_space(self, _=None):  # ignore second argument in API
-        # get observation space of the single agent
+        # get observation space of the single agents
         return self.env.observation_space(self.env.possible_agents[0])
 
     def seed(self, seed=None):

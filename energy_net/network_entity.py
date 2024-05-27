@@ -53,7 +53,7 @@ class NetworkEntity:
         pass
 
     @abstractmethod
-    def system_step(self):
+    def update_system_state(self):
         pass
 
 

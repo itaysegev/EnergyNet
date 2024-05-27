@@ -15,8 +15,6 @@ class StorageState(State):
     energy_capacity:float
 
 
-
-
 class ProducerState(State):
     max_produce:float = MAX_PRODUCTION
     production:float = MIN_PRODUCTION
@@ -26,17 +24,5 @@ class ConsumerState(State):
     max_electric_power:float = MAX_ELECTRIC_POWER
     efficiency:float = DEFAULT_EFFICIENCY
     consumption:float = NO_CONSUMPTION
-
-
-
-class HouseholdState(State):
-    storage:float
-    curr_consumption:float
-    pred_consumption:float
-
-
-class HouseholdConsumptionState(State):
-    consumption:float
-    next_consumption:float
 
 
