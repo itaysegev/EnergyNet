@@ -14,7 +14,10 @@ class ElinorUnitRewardFunction(RewardFunction):
 
     def __init__(self, env_metadata: Mapping[str, Any], **kwargs):
         super().__init__(env_metadata, **kwargs)
+        self.A = 5
+        self.B = 10
 
-    # TODO: implement the reward function
+    # Elinor's reward function 
     def calculate(self, curr_state, action, next_state, **kwargs) -> float:
-        pass
+        pg = next_state['consumption'] + action.item()
+        return -1 * (self.A * pg ** 2 + self.B) if pg > 0 else 0

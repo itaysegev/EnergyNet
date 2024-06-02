@@ -2,11 +2,12 @@ from typing import Any, Union
 import numpy as np
 from ..config import INITIAL_TIME, NO_CONSUMPTION, MAX_CONSUMPTION, NO_CHARGE, MAX_CAPACITY
 from ..defs import Bounds
-from ..model.action import EnergyAction, StorageAction, ConsumeAction
+from ..model.action import EnergyAction, StorageAction, ConsumeAction, ProduceAction 
 from ..elinor_simulation.state import UnitState as State
 from ..network_entity import CompositeNetworkEntity
 from ..entities.local_storage import Battery
 from ..entities.device import StorageDevice
+import datetime
 from ..entities.params import StorageParams, ProductionParams, ConsumptionParams
 from ..entities.local_producer import PrivateProducer
 from ..elinor_simulation.elinor_consumption import ElinorUnitConsumption
@@ -14,7 +15,6 @@ from ..elinor_simulation.elinor_consumption import ElinorUnitConsumption
 class ElinorUnit(CompositeNetworkEntity):
    
     def __init__(self, name: str, consumption_params_dict:dict[str, ConsumptionParams]=None, storage_params_dict:dict[str,StorageParams]=None, production_params_dict:dict[str,ProductionParams]=None, agg_func=None):
-
         # holding the elements that should be considered for consumption, production and storage actions
         consumption_dict = {name: ElinorUnitConsumption(params) for name, params in consumption_params_dict.items()}
         self.consumption_keys = list(consumption_dict.keys())
@@ -22,6 +22,7 @@ class ElinorUnit(CompositeNetworkEntity):
         self.storage_keys = list(storage_dict.keys())
         production_dict = {name: PrivateProducer(params) for name, params in production_params_dict.items()}
         self.production_keys = list(production_dict.keys())
+        self._initial_date = None
 
         # the base class holds the entities in a single array
         sub_entities = {**consumption_dict, **storage_dict, **production_dict}
@@ -31,22 +32,26 @@ class ElinorUnit(CompositeNetworkEntity):
         inital_soc = sum(s.state['state_of_charge'] for s in self.get_storage_devices().values())
 
         self._init_state = State(storage=inital_soc, consumption=NO_CONSUMPTION,
-                                  next_consumption=self.predict_next_consumption())
+                                  next_consumption=NO_CONSUMPTION)
                                   
         self._state = self._init_state
+        
 
     def perform_joint_action(self, actions:dict[str, EnergyAction]):
         super().step(actions)
 
     def step(self, action: Union[np.ndarray, StorageAction]):
+
         # storage action
         action = StorageAction.from_numpy(action) if type(action) == np.ndarray else action
         current_storage = action['charge']
-        current_consumption = self._state['consumption']
+        current_consumption = self.get_current_state()['consumption']
         # this is how much we buy/sell to the grid
         pg = current_consumption + current_storage
 
-        actions = {self.consumption_keys[0]: ConsumeAction(consume=current_consumption), self.storage_keys[0]: action}
+        # There is only one device from each type
+        # TODO: Add production
+        actions = {self.storage_keys[0]: action, self.consumption_keys[0]: ConsumeAction(consumption=current_consumption)}
         super().step(actions)
 
 
@@ -96,9 +101,10 @@ class ElinorUnit(CompositeNetworkEntity):
         for entity_name in self.sub_entities:
             cur_state = self.sub_entities[entity_name].get_current_state()
             for k, v in cur_state.items():
-                if v is None or type(v) is not int:
+                if v is None or isinstance(v, datetime.date):
                     v = 0
                 sum_dict[k] = sum_dict.get(k, 0) + v
+        
         return State(storage=sum_dict['state_of_charge'], consumption=sum_dict['consumption'], next_consumption=sum_dict['next_consumption'])
 
 
@@ -152,6 +158,18 @@ class ElinorUnit(CompositeNetworkEntity):
 
     def get_next_consumption(self) -> float:
         return sum([self.sub_entities[name].predict_next_consumption() for name in self.consumption_keys])
+    
+
+    @property 
+    def initial_date(self):
+        return self._initial_date
+
+    @initial_date.setter
+    def initial_date(self, date):
+        self._initial_date = date
+        for entity in self.sub_entities.values():
+            if hasattr(entity, 'date'):
+                entity.date = date
 
 
 

@@ -22,16 +22,16 @@ def simulator():
             
             observation, _ = env.reset()
             print(observation, "obs")
-            
-            
+            print("#####################")
+
 
             for _ in range(4):
                 # action = StorageAction(charge=env.action_space.sample().item())  # agents policy that uses the observation and info
                 # action, _ = model.predict(obs, deterministic=True)
                 action = env.action_space.sample()
-                
                 observation, reward, terminated, truncated, info = env.step(action)
                 print(observation, "obs")
+                print(reward, "reward")
                 
                 rewards.append(reward)
                 actions.append(action.item())

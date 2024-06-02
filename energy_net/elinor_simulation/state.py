@@ -13,7 +13,7 @@ class ConsumptionState:
         self.data: ConsumptionStateDict = {
             'consumption': consumption,
             'next_consumption': next_consumption,
-            'date': date if date else datetime.now()
+            'date': date if date else None
         }
 
     def promote_date(self, minutes: int = 30):
@@ -23,6 +23,10 @@ class ConsumptionState:
 
     def set_date(self, new_date: datetime):
         """Set the date to a new value."""
+        if isinstance(new_date, str):
+            new_date = datetime.fromisoformat(new_date)
+        if not isinstance(new_date, datetime):
+            raise ValueError("The date must be a datetime object.")
         self.data['date'] = new_date
 
     def get_date_in_month_hour_format(self) -> str:
