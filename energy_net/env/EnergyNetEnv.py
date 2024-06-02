@@ -27,7 +27,8 @@ class EnergyNetEnv(ParallelEnv, Environment):
 
     def __init__(self,
         network_entities: List[NetworkEntity],
-        root_directory: Union[str, Path] = None, 
+        root_directory: Union[str, Path] = None,
+        simulation_start_date: str = None,
         simulation_start_time_step: int = None,
         simulation_end_time_step: int = None,
         episode_time_steps: int = None, 
@@ -41,7 +42,6 @@ class EnergyNetEnv(ParallelEnv, Environment):
         self.episode_tracker = EpisodeTracker(simulation_start_time_step, simulation_end_time_step)
         super().__init__(seconds_per_time_step=seconds_per_time_step, random_seed=initial_seed, episode_tracker=self.episode_tracker)
 
-
         self.network_entities = network_entities 
         self.timestep = None
         self.episode_time_steps = episode_time_steps
@@ -49,8 +49,12 @@ class EnergyNetEnv(ParallelEnv, Environment):
         self.simulation_end_time_step = simulation_end_time_step
         self.time_step_num = simulation_end_time_step - simulation_start_time_step if simulation_end_time_step is not None and simulation_start_time_step is not None else DEFAULT_TIME_STEP
         self.num_entities = len(self.network_entities)
-        
 
+
+        for obj in self.network_entities:
+            if hasattr(obj, 'initial_date') and simulation_start_date is not None:
+                obj.initial_date = simulation_start_date
+        
         # set random seed if specified
         self.__np_random = None
         self.seed(initial_seed)
@@ -102,12 +106,14 @@ class EnergyNetEnv(ParallelEnv, Environment):
         self.__action_space = self.get_action_space()
         # get all observations
         observations = self.__observe_all()
-        
-        
+    
+
         if not return_info:
             return observations
         else:
             return observations, self.get_info()
+        
+        
 
     def seed(self, seed=None):
         self.__np_random, seed = seeding.np_random(seed)
