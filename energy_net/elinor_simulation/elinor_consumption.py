@@ -40,7 +40,7 @@ class ElinorUnitConsumption(ElementaryNetworkEntity):
     #TODO: Implement the get_current_state function according to the consumption function 
     def get_current_consumption(self):
         total_minutes = (self.date - self._init_state['date']).total_seconds() / 60
-        time_step = int(total_minutes // 30)
+        time_step = int(total_minutes // 30) % len(self.net_load_demand)
         return self.net_load_demand[time_step]
 
     def get_observation_space(self):
