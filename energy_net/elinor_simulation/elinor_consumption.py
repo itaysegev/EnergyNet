@@ -18,7 +18,7 @@ class ElinorUnitConsumption(ElementaryNetworkEntity):
         self._state = self._init_state
         self.net_load_demand = self.calculate_net_load_demand()
     
-
+    # TODO: Implement the informative predict_next_consumption function 
     def predict_next_consumption(self, param: ConsumptionParams = None) -> float:
         return PRED_CONST_DUMMY
 
