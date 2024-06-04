@@ -21,13 +21,13 @@ def example_unit():
 
         # initialize storage devices
         storage_params_arr=[]
-        storage_params = StorageParams(name = 'test_battery', energy_capacity = 100, power_capacity = 200, inital_charge = 50, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
+        storage_params = StorageParams(name = 'test_battery', energy_capacity = 100, power_capacity = 200, inital_charge = 0, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
         storage_params_arr.append(storage_params)
         storage_params_dict = {'test_battery': storage_params}
 
         # initialize production devices
         production_params_arr=[]
-        production_params = ProductionParams(name='test_pv', max_production=100, efficiency=0.9, energy_dynamics=PVDynamics())
+        production_params = ProductionParams(name='test_pv', max_production=100, efficiency=1, energy_dynamics=PVDynamics())
         production_params_arr.append(production_params)
         production_params_dict = {'test_pv': production_params}
 

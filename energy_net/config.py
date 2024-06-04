@@ -18,7 +18,7 @@ INITIAL_TIME = 0
 MAX_TIME = float('inf')
 INF = float('inf')
 MAX_CONSUMPTION = float('inf')
-PRED_CONST_DUMMY = 100
+PRED_CONST_DUMMY = 0.7
 # Define constants for the maximum and minimum exponent values
 MAX_EXPONENT = 200
 MIN_EXPONENT = -200
