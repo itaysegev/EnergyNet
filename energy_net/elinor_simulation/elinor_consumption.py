@@ -1,5 +1,6 @@
 from ..config import  NO_CONSUMPTION,  PRED_CONST_DUMMY, MIN_POWER
 import numpy as np
+import pandas as pd
 from scipy.interpolate import PchipInterpolator
 from datetime import datetime, timedelta
 from ..defs import Bounds
@@ -69,23 +70,12 @@ class ElinorUnitConsumption(ElementaryNetworkEntity):
     # Elinor's consumption function
     @staticmethod
     def calculate_net_load_demand():
-        # prepare data. T is the horizon, where t is the timescale
-        T = 24 # hr
-        t = np.linspace(0, T, num=120) # hr
+        df = pd.read_csv('data.csv')
 
-        tu1 = [0, 4.3, 7.6, 10.9, 16.3, 19.6, 22.9, 24] # hr
-        Plu = [0.15, 0.15, 0.6, 0.2, 0.2, 1.2, 0.2, 0.2] # p.u.
-        tu2 = [0, 6, 12, 18, 24] # hr
-        Ppvu = [0, 0, 0.8, 0, 0] # p.u.
+        consumption_data = df.Load.to_numpy()
 
-        pchip_interpolator_load = PchipInterpolator(tu1, Plu)
-        Pa = pchip_interpolator_load(t) # p.u.
+        consumption_data = [int(x.replace(',', '')) for x in consumption_data]
 
-        pchip_interpolator_pv = PchipInterpolator(tu2, Ppvu)
-        Ppv = pchip_interpolator_pv(t) # p.u.
-
-        PL = Pa - Ppv
-        return PL
-        
+        return consumption_data
         
         
