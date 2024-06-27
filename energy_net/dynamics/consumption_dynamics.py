@@ -9,7 +9,7 @@ class ElectricHeaterDynamics(ConsumptionDynamics):
     def __init__(self) -> None:
         super().__init__()
         
-    def do(self, action: EnergyAction, state:State) -> float:
+    def do(self, action: EnergyAction, state:ConsumerState) -> ConsumerState:
         """Get electric heater consumption.
         
         Parameters
@@ -40,16 +40,3 @@ class ElectricHeaterDynamics(ConsumptionDynamics):
         pass
 
 
-
-class PCSUnitConsumptionDynamics(ConsumptionDynamics):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def do(self, action: EnergyAction, state:State=None , params= None) -> float:
-        return 8
-
-    def get_current_consumption_capability(self):
-        pass
-
-    def predict_consumption_capability(self, state):
-        pass

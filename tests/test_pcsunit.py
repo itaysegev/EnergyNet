@@ -1,35 +1,22 @@
-
-import warnings
-
-import numpy as np
-
-from energy_net.agents.SACAgent import SACAgent
-from energy_net.entities.params import StorageParams, ConsumptionParams, ProductionParams
-from energy_net.env.EnergyNetEnv import EnergyNetEnv
-from energy_net.model.action import EnergyAction, ProduceAction, StorageAction, ConsumeAction
-from energy_net.dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
+import unittest
+from energy_net.entities.pcsunit import PCSUnit
+from energy_net.entities.params import StorageParams, ProductionParams, ConsumptionParams
+from energy_net.dynamics.consumption_dynamics import ConsumptionDynamics
 from energy_net.dynamics.production_dynamics import PVDynamics
 from energy_net.dynamics.storage_dynamics import BatteryDynamics
-from energy_net.entities.pcsunit import PCSUnit
-from energy_net.entities.params import StorageParams, ConsumptionParams, ProductionParams
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
-# Add the project's root directory to sys.path
-from energy_net.env.single_entity_v0 import gym_env
-from common import single_agent_cfgs, get_env_cfgs
+import numpy as np
 
-def test_pcsunit():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=RuntimeWarning)
-
-        # initialize consumer devices
+def default_pcsunit():
+    # initialize consumer devices
         consumption_params_arr=[]
-        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=PCSUnitConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=ConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
 
         # initialize storage devices
         storage_params_arr=[]
-        storage_params = StorageParams(name = 'test_battery', energy_capacity = 100, power_capacity = 200,inital_charge = 50, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
+        storage_params = StorageParams(name = 'test_battery', energy_capacity = 100, power_capacity = 200,initial_charge = 50, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
         storage_params_arr.append(storage_params)
         storage_params_dict = {'test_battery': storage_params}
 
@@ -40,66 +27,26 @@ def test_pcsunit():
         production_params_dict = {'test_pv': production_params}
 
         # initilaize pcsunit
-        pcsunit = PCSUnit(name="test_pcsunit", consumption_params_dict=consumption_params_dict, storage_params_dict=storage_params_dict, production_params_dict=production_params_dict, agg_func= None)
-
-        # check individual actions
-        pcsunit.perform_joint_action({'test_battery':StorageAction(charge=10), 'pcsunit_consumption': ConsumeAction(consume=None), 'test_pv': ProduceAction(produce=None)})
+        return PCSUnit(name="test_pcsunit", consumption_params_dict=consumption_params_dict, storage_params_dict=storage_params_dict, production_params_dict=production_params_dict, agg_func= None)
 
 
-        # create wrapper for the environment
-        #env = EnergyNetEnv(network_entities=[pcsunit],
-        #                    simulation_start_time_step=0,
-        #                    simulation_end_time_step=100,
-        #                    episode_time_steps=100,
-        #                    seconds_per_time_step=1,
-        #                    reward_function=None,
-        #                    random_seed=None)
+class TestPCSUnit(unittest.TestCase):
+    def setUp(self):
+        # Assuming `default_pcsunit` is a function that returns a default PCSUnit instance for testing
+        self.pcs_unit = default_pcsunit()
 
-        for env_name, env_cfg in single_agent_cfgs.items():
-            seed = hash(env_name)
-            seed = abs(hash(str(seed)))
-            env_cfg['network_entities'] = [pcsunit]
-            env = gym_env(**env_cfg, initial_seed=seed)
+    def test_initialization(self):
+        # Test the initialization of your PCSUnit
+        self.assertEqual(self.pcs_unit.name, "test_pcsunit")
+        
 
-        # initialize agent
-        agent = SACAgent(env, 'MlpPolicy', verbose=0, log_dir="/tmp/gym/")
+        # Test the initialization of the PCSUnit's devices
+        self.assertEqual(self.pcs_unit.sub_entities[self.pcs_unit.consumption_keys[0]].lifetime_constant, DEFAULT_LIFETIME_CONSTANT)
+        self.assertEqual(self.pcs_unit.sub_entities[self.pcs_unit.storage_keys[0]].energy_capacity, 100)
+        self.assertEqual(self.pcs_unit.sub_entities[self.pcs_unit.production_keys[0]].max_production, 100)
 
-        # train agent
-        #agent.train(total_timesteps=100)
-
-        # full train and evaluation process
-        rewards, actions, soc = [], [], []
-        eval_timesteps = 50
-        train_timesteps = 100
-        with warnings.catch_warnings():
-                agent.train(total_timesteps=train_timesteps)
-                observation = agent.env.reset()
-                for _ in range(eval_timesteps):
-                    soc.append(observation.squeeze()[0])
-                    action = agent.get_action(observation, deterministic=True)
-                    actions.append(action.item())
-                    observation, reward, done, info = agent.env.step(action)
-                    rewards.append(reward.item())
-
-                    if done:
-                        observation, info = env.reset()
-        env.close()
-
-    '''
-    # run simulation
-    for _ in range(1000):
-        action = env.action_space.sample()  # agents policy that uses the observation and info
-        print("action:", action)
-        observation, reward, terminated, truncated, info = env.step(action)
-        #print(observation, "obs")
-
-        if terminated or truncated:
-            observation, info = env.reset()
-
-    env.close()
-    '''
+        
 
 
 if __name__ == '__main__':
-    test_pcsunit()
-
+    unittest.main()
