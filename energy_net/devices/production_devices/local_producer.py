@@ -1,12 +1,12 @@
 
 import numpy as np
 
-from .device import Device
-from .params import ProductionParams
-from ..defs import Bounds
-from ..model.state import ProducerState
-from ..model.action import ProduceAction
-from ..config import MIN_POWER, MIN_PRODUCTION, MAX_ELECTRIC_POWER, DEFAULT_SELF_CONSUMPTION
+from ..device import Device
+from ...entities.params import ProductionParams
+from ...defs import Bounds
+from ...model.state import ProducerState
+from ...model.action import ProduceAction
+from ...config import MIN_POWER, MIN_PRODUCTION, MAX_ELECTRIC_POWER, DEFAULT_SELF_CONSUMPTION
 
 class PrivateProducer(Device):
     """Base producer class.
@@ -24,12 +24,14 @@ class PrivateProducer(Device):
     """
     
     def __init__(self, production_params:ProductionParams):
-        super().__init__(production_params)
+        
         self.max_production = production_params["max_production"]
         self.init_max_production = self.max_production
         self.production = MIN_PRODUCTION
         self.self_consumption = production_params["self_consumption"] if "self_consumption" in production_params  else DEFAULT_SELF_CONSUMPTION  # self consumption
         self.action_type = ProduceAction
+        init_state = ProducerState(max_produce=self.max_production, production=self.production)
+        super().__init__(production_params, init_state=init_state)
 
     @property
     def current_state(self) -> ProducerState:
@@ -59,18 +61,14 @@ class PrivateProducer(Device):
     def get_current_state(self) -> ProducerState:
         return self.current_state
     
-    def update_state(self, state: ProducerState):
-        self.max_production = state.max_production
-        self.production = state.production
-        super().update_state(state)
-        
     
     def get_reward(self):
         return self.self_consumption
     
     def reset(self):
+        super().reset()
         self.max_production = self.init_max_production
-        return self.get_current_state()
+        
 
     def get_action_space(self) -> Bounds:
         return Bounds(low=MIN_POWER, high=self.max_production, shape=(1,), dtype=np.float32)

@@ -1,8 +1,8 @@
 from abc import abstractmethod
-from .model.state import State
-from .model.action import EnergyAction
-from .model.reward import Reward
-from .defs import Bid
+from ..model.state import State
+from ..model.action import EnergyAction
+from ..model.reward import Reward
+from ..defs import Bid
 from .network_entity import NetworkEntity
 
 class MarketEntity():

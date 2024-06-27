@@ -44,7 +44,7 @@ ENV_CFG_FILE = Path(__file__).parent / 'test_env_configs.json'
 def get_env_cfgs():
     with open(ENV_CFG_FILE, 'r') as f:
         env_cfgs = json.load(f)
-    #env_cfgs['single_entity_simple']['network_entities'] = default_network_entities()
+    env_cfgs['single_entity_simple']['network_entities'] = default_network_entities()
     return env_cfgs
 
 

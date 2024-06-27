@@ -7,13 +7,15 @@ from gymnasium.spaces import Box, Dict
 from gymnasium.utils import seeding
 from pettingzoo import ParallelEnv
 
+from ..network import Network
+from ..network_agent import Agent
 from ..config import DEFAULT_TIME_STEP
 from ..defs import Bounds
 from ..entities.pcsunit import DefaultPCSUnitRewardFunction
 from ..env.base import Environment, EpisodeTracker
 from ..model.action import EnergyAction
 from ..model.reward import RewardFunction
-from ..network_entity import NetworkEntity
+from ..network import Network
 from ..utils.env_utils import bounds_to_gym_box
 
 
@@ -26,80 +28,58 @@ class EnergyNetEnv(ParallelEnv, Environment):
     metadata = {"name": "energy_net_env_v0"}
 
     def __init__(self,
-        network_entities: List[NetworkEntity],
-        root_directory: Union[str, Path] = None, 
+        network_lst: List[Network],
         simulation_start_time_step: int = None,
         simulation_end_time_step: int = None,
         episode_time_steps: int = None, 
         seconds_per_time_step: float = None,
         initial_seed: int = None,
-        reward_function: RewardFunction = None,
         **kwargs: Any):
 
-        # set the root directory
-        self.root_directory = root_directory
         self.episode_tracker = EpisodeTracker(simulation_start_time_step, simulation_end_time_step)
         super().__init__(seconds_per_time_step=seconds_per_time_step, random_seed=initial_seed, episode_tracker=self.episode_tracker)
 
+        self.network_lst = network_lst 
+        self.num_entities = len(self.network_lst)
 
-        self.network_entities = network_entities 
-        self.timestep = None
-        self.episode_time_steps = episode_time_steps
-        self.simulation_start_time_step = simulation_start_time_step
-        self.simulation_end_time_step = simulation_end_time_step
-        self.time_step_num = simulation_end_time_step - simulation_start_time_step if simulation_end_time_step is not None and simulation_start_time_step is not None else DEFAULT_TIME_STEP
-        self.num_entities = len(self.network_entities)
-        
+
+        self.__state = None
 
         # set random seed if specified
         self.__np_random = None
         self.seed(initial_seed)
 
         # pettingzoo required attributes
-        self.entities = {entity.name: entity for _, entity in enumerate(self.network_entities)}
-        self.possible_agents = list(self.entities.keys())
-        self.agents = []
+        self.entities = {entity.name: entity for entity in self.network_lst}
         
-        # set reward function
-        self.reward_function = reward_function if reward_function is not None else DefaultPCSUnitRewardFunction(env_metadata=self.get_metadata)
+        self.agents = []
+        self.agents_name_to_network = {}
+        
        
-        # reset environment and initializes episode time steps
-        self.reset()
-
-        # reset episode tracker to start after initializing episode time steps during reset
-        self.episode_tracker.reset_episode_index()
+        # # reset episode tracker to start after initializing episode time steps during reset
+        # self.episode_tracker.reset_episode_index()
 
         self.__observation_space = self.get_observation_space()
         self.__action_space = self.get_action_space()
 
-        # state and env objects
-        self.__state = None
-        # self.__rewards = None
-        # self.__episode_rewards = []
         
-        
-        
-
-
 
     def reset(self, seed=None, return_info=True, options=None):
         
         self.reset_time_step()
+
         # set seed if given
         if seed is not None:
             self.seed(seed)
 
-
-        # reset agents
-        self.agents = self.possible_agents.copy()
-        
+        assert len(self.agents) > 0, "No agents have been set. Please set agents before calling reset."
 
         for entity in self.entities.values():
             entity.reset()
 
-        # reset reward function (does nothing by default)
-        self.reward_function.reset()
+
         self.__action_space = self.get_action_space()
+
         # get all observations
         observations = self.__observe_all()
         
@@ -122,18 +102,24 @@ class EnergyNetEnv(ParallelEnv, Environment):
         # Perform the actions
         for agent_name, actions in joint_action.items():
             #s
-            curr_state = self.entities[agent_name].get_current_state()
+            curr_state = self.agents_name_to_network[agent_name].get_state()
             # NEW TIME TICK
-            self.entities[agent_name].step(actions)
+
+            self.self.agents_name_to_network.step(actions)
             #s'
-            next_state = self.entities[agent_name].get_current_state()    
-            #r
-            rewards[agent_name] = self.reward_function.calculate(curr_state, actions, next_state, time_steps=self.time_step)
+            next_state = self.agents_name_to_network[agent_name].get_state()    
+            
+            #TODO: r
+            # rewards[agent_name] = self.reward_function.calculate(curr_state, actions, next_state, time_steps=self.time_step)
 
         # get new observations according to the current state
         obs = self.__observe_all()
+
         self.__action_space = self.get_action_space()
+
         infos = self.get_info()
+
+        #TODO: 
         # Check if the simulation has reached the end
         truncs = {a: False for a in self.agents}
         if self.terminated():
@@ -145,29 +131,7 @@ class EnergyNetEnv(ParallelEnv, Environment):
 
         return obs, rewards, terminations, truncs, infos
 
-    '''
-
-    @abstractmethod
-    def get_action_space(self) -> spaces:
-        """
-        Get the action space of the network entity.
-
-        Returns:
-        spaces: The action space.
-        """
-        pass
-
-    @abstractmethod
-    def get_observation_space(self) -> spaces:
-        """
-        Get the observation space of the network entity.
-
-        Returns:
-        spaces: The observation space.
-        """
-        pass
-
-    '''
+ 
     @lru_cache(maxsize=None)
     def observation_space(self, agent: str):
         return self.__observation_space[agent]
@@ -176,13 +140,6 @@ class EnergyNetEnv(ParallelEnv, Environment):
     def action_space(self, agent: str):
         return self.__action_space[agent]
     
-    @property
-    def possible_agents(self):
-        return self.__possible_agents
-    
-    @possible_agents.setter
-    def possible_agents(self, possible_agents: List[str]):
-        self.__possible_agents = possible_agents
     
 
     ######################
@@ -193,6 +150,12 @@ class EnergyNetEnv(ParallelEnv, Environment):
     #######################
     # Extra API Functions #
     #######################
+
+    def set_agents(self, agent: Agent, network_idx: int):
+        network = self.network_lst[network_idx]
+        agent.set_network(network)
+        self.agents_name_to_network[agent.name] = network
+        self.agents.append(agent)
     
     def agent_iter(self):
         """
@@ -212,7 +175,7 @@ class EnergyNetEnv(ParallelEnv, Environment):
         return self.__observe_all()
     
     def __observe_all(self):
-        return {agent: np.array(list(self.entities[agent].get_current_state().values()),dtype=np.float32) for agent in self.agents}
+        return {agent: np.array(list(self.entities[agent].get_state().values()),dtype=np.float32) for agent in self.agents}
 
     def convert_space(self, space):
         if isinstance(space, dict):
@@ -230,25 +193,6 @@ class EnergyNetEnv(ParallelEnv, Environment):
         return {name: bounds_to_gym_box(entity.get_action_space()) for name, entity in self.entities.items()}
 
 
-
-    @property
-    def episode_rewards(self):
-        return self.__episode_rewards
-    
-    @episode_rewards.setter
-    def episode_rewards(self, episode_rewards):
-        self.__episode_rewards = episode_rewards
-    
-    @property
-    def rewards(self):
-        """reward time series for each agents"""
-        return self.__rewards
-    
-    @rewards.setter
-    def rewards(self, rewards):
-        self.__rewards = rewards
-
-
     def terminated(self):
         return self.time_step == self.simulation_end_time_step - self.simulation_start_time_step - 1
     
@@ -258,7 +202,6 @@ class EnergyNetEnv(ParallelEnv, Environment):
         """Number of time steps in current episode split."""
         return self.episode_tracker.episode_time_steps
     
-
 
     def get_info(self):
         return {agent: {} for agent in self.agents}
