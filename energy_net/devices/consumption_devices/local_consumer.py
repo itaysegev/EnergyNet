@@ -1,11 +1,11 @@
 
 import numpy as np
-from ..defs import Bounds
-from ..entities.device import Device
-from ..model.state import ConsumerState
-from ..model.action import ConsumeAction
-from ..config import MAX_ELECTRIC_POWER, MIN_POWER, MIN_EFFICIENCY, MAX_EFFICIENCY, NO_CONSUMPTION
-from .params import ConsumptionParams
+from ...defs import Bounds
+from ..device import Device
+from ...model.state import ConsumerState
+from ...model.action import ConsumeAction
+from ...config import MAX_ELECTRIC_POWER, MIN_POWER, MIN_EFFICIENCY, MAX_EFFICIENCY, NO_CONSUMPTION
+from ...entities.params import ConsumptionParams
 
 class ConsumerDevice(Device):
     """Base consumer class.
@@ -22,12 +22,13 @@ class ConsumerDevice(Device):
     """
     
     def __init__(self, consumptionParams:ConsumptionParams):
-        super().__init__(consumptionParams)
-        self.max_electric_power = MAX_ELECTRIC_POWER if consumptionParams["max_electric_power"] is None else consumptionParams["max_electric_power"]
-        self.efficiency = MAX_EFFICIENCY if consumptionParams["efficiency"] is None else consumptionParams["efficiency"]
+        self.max_electric_power = consumptionParams["max_electric_power"] if "max_electric_power" in consumptionParams is None else MAX_ELECTRIC_POWER
+        self.efficiency = consumptionParams["efficiency"] if "efficiency" in consumptionParams else MAX_EFFICIENCY
         self.init_max_electric_power = self.max_electric_power
         self.consumption = NO_CONSUMPTION
         self.action_type = ConsumeAction
+        init_state = ConsumerState(max_electric_power=self.max_electric_power, efficiency=self.efficiency, consumption=self.consumption)
+        super().__init__(consumptionParams, init_state=init_state)
 
 
     @property
@@ -67,7 +68,7 @@ class ConsumerDevice(Device):
         super().reset()
         self.max_electric_power = self.init_max_electric_power
         self.consumption = NO_CONSUMPTION
-        return self.get_current_state()
+        
 
 
     def get_action_space(self):
@@ -81,5 +82,3 @@ class ConsumerDevice(Device):
         return Bounds(low=low, high=high, shape=(len(low),), dtype=np.float32)
         
     
-   
-

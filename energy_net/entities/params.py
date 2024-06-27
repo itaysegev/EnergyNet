@@ -17,7 +17,7 @@ class DeviceParams(TypedDict):
 class StorageParams(DeviceParams):
     energy_capacity: float
     power_capacity: float
-    inital_charge: float
+    initial_charge: float
     charging_efficiency: float
     discharging_efficiency: float
     net_connection_size: float
@@ -25,7 +25,7 @@ class StorageParams(DeviceParams):
 class ConsumptionParams(DeviceParams):
     energy_capacity: float
     power_capacity: float
-    inital_charge: float
+    initial_charge: float
 
 
 class ProductionParams(DeviceParams):
