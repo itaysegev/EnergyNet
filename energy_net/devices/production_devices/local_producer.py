@@ -2,7 +2,7 @@
 import numpy as np
 
 from ..device import Device
-from ...entities.params import ProductionParams
+from ..params import ProductionParams
 from ...defs import Bounds
 from ...model.state import ProducerState
 from ...model.action import ProduceAction

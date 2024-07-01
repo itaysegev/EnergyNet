@@ -4,7 +4,7 @@ import numpy as np
 
 
 
-from ..entities.params import DeviceParams
+from .params import DeviceParams
 from ..entities.network_entity import ElementaryNetworkEntity
 from ..config import DEFAULT_LIFETIME_CONSTANT
 from ..model.state import State
