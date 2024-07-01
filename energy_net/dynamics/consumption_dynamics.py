@@ -21,10 +21,10 @@ class ElectricHeaterDynamics(ConsumptionDynamics):
         return : float
             Electric heater consumption in [kW].
         """
-        value = action[0]
+        value = action["consume"] 
         if value is not None:
             new_state = state.copy()
-            new_state.consumption = min(value, state.max_electric_power)
+            new_state['consumption'] = min(value, state['max_electric_power'])
             return new_state	
         else:
             raise ValueError('Invalid action')

@@ -14,8 +14,9 @@ class PVDynamics(ProductionDynamics):
         """
         value = action['produce']
         if value is not None:
-           state['production'] = min(value, state['max_produce'])
-           return state
+           new_state = state.copy()
+           new_state['production'] = min(value, state['max_produce'])
+           return new_state
         else:
             return self.get_current_production(state,params)
         
