@@ -1,3 +1,4 @@
+import random
 import unittest
 import math
 
@@ -54,14 +55,53 @@ class TestBattery(unittest.TestCase):
         np.testing.assert_array_equal(observation_space.low, low)
         np.testing.assert_array_equal(observation_space.high, high)
 
-    def test_step(self):
-        state = self.battery.init_state
-        self.battery.step(action=EnergyAction(charge=10))
+    def test_step_no_losses(self):
+        b = self.battery
+        #print('SoC:', b.state)
+        b.step(action=EnergyAction({'charge':10}))
+        #print('SoC charge 10:', b.state)
+
+
+        n = 20
+        for itr in range(n):
+            v = random.uniform(-150, 150)
+            print('SoC before action: ', b.state)
+            print('Value: ', v)
+            b.step(action=EnergyAction(charge=v))
+            print('SoC after action: ', b.state)
+            print('\n\n\n')
+
+        '''
         state['charge'] = 60
         self.assertEqual(self.battery.state, state)
         
         self.battery.step(action=EnergyAction(charge=150))
         self.assertEqual(self.battery.state, state)
+
+        values = random.uniform(-150.0, 150.0)
+
+        for v in values
+            self.battery.step(action=EnergyAction(charge=value))
+        '''
+
+    def test_step_with_losses(self):
+        b = self.battery
+        print('SoC before changes:', b.state)
+        b.set_discharging_efficiency(self, 0.5)
+        print('SoC after discharging_efficiency change:', b.state)
+        b.step(action=EnergyAction({'charge':10}))
+        print('SoC charge 10:', b.state)
+
+
+    ''' n = 20
+        for itr in range(n):
+            v = random.uniform(-150, 150)
+            print('SoC before action: ', b.state)
+            print('Value: ', v)
+            b.step(action=EnergyAction(charge=v))
+            print('SoC after action: ', b.state)
+            print('\n\n\n')'''
+
        
   
 

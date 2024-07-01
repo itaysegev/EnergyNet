@@ -1,3 +1,4 @@
+import copy
 from abc import abstractmethod
 from collections import OrderedDict
 from typing import Union
@@ -90,6 +91,7 @@ class ElementaryNetworkEntity(NetworkEntity):
     def step(self, action: EnergyAction):
         new_state = self.energy_dynamics.do(action=action, state=self.state)
         self.state = new_state
+
             
 
     # TODO: implement predict
