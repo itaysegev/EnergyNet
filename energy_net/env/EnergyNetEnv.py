@@ -8,14 +8,12 @@ from gymnasium.utils import seeding
 from pettingzoo import ParallelEnv
 
 from ..network import Network
-from ..network_agent import Agent
-from ..config import DEFAULT_TIME_STEP
 from ..defs import Bounds
-from ..entities.pcsunit import DefaultPCSUnitRewardFunction
 from ..env.base import Environment, EpisodeTracker
 from ..model.action import EnergyAction
 from ..model.reward import RewardFunction
 from ..network import Network
+from ..network_agent import NetworkAgent
 from ..utils.env_utils import bounds_to_gym_box
 
 
@@ -29,11 +27,11 @@ class EnergyNetEnv(ParallelEnv, Environment):
 
     def __init__(self,
         network_lst: List[Network],
-        simulation_start_time_step: int = None,
-        simulation_end_time_step: int = None,
-        episode_time_steps: int = None, 
-        seconds_per_time_step: float = None,
-        initial_seed: int = None,
+        simulation_start_time_step: int = None, # Time step to start simulation
+        simulation_end_time_step: int = None, 
+        episode_time_steps: int = None, # Number of time steps in an episode
+        seconds_per_time_step: float = None, # Number of seconds in 1 `time_step` and must be set to >= 1.
+        initial_seed: int = None, #  Pseudorandom number generator seed for repeatable results.
         **kwargs: Any):
 
         self.episode_tracker = EpisodeTracker(simulation_start_time_step, simulation_end_time_step)
@@ -41,6 +39,8 @@ class EnergyNetEnv(ParallelEnv, Environment):
 
         self.network_lst = network_lst 
         self.num_entities = len(self.network_lst)
+
+        self.episode_time_steps = episode_time_steps
 
 
         self.__state = None
@@ -54,19 +54,30 @@ class EnergyNetEnv(ParallelEnv, Environment):
         
         self.agents = []
         self.agents_name_to_network = {}
-        
-       
-        # # reset episode tracker to start after initializing episode time steps during reset
-        # self.episode_tracker.reset_episode_index()
 
         self.__observation_space = self.get_observation_space()
         self.__action_space = self.get_action_space()
 
+
+        # reset environment and initializes episode time steps
+        self.reset()
+
+        # reset episode tracker to start after initializing episode time steps during reset
+        self.episode_tracker.reset_episode_index()
         
 
     def reset(self, seed=None, return_info=True, options=None):
         
-        self.reset_time_step()
+        super().reset()
+
+        # update time steps for time series
+        self.episode_tracker.next_episode(
+            self.episode_time_steps,
+            False,
+            False,
+            self.random_seed,
+        )
+
 
         # set seed if given
         if seed is not None:
@@ -133,11 +144,11 @@ class EnergyNetEnv(ParallelEnv, Environment):
 
  
     @lru_cache(maxsize=None)
-    def observation_space(self, agent: str):
+    def observation_space(self, agent: str) -> Box:
         return self.__observation_space[agent]
 
    
-    def action_space(self, agent: str):
+    def action_space(self, agent: str) -> Box:
         return self.__action_space[agent]
     
     
@@ -151,7 +162,7 @@ class EnergyNetEnv(ParallelEnv, Environment):
     # Extra API Functions #
     #######################
 
-    def set_agents(self, agent: Agent, network_idx: int):
+    def set_agents(self, agent: NetworkAgent, network_idx: int) -> None:
         network = self.network_lst[network_idx]
         agent.set_network(network)
         self.agents_name_to_network[agent.name] = network
@@ -177,25 +188,30 @@ class EnergyNetEnv(ParallelEnv, Environment):
     def __observe_all(self):
         return {agent: np.array(list(self.entities[agent].get_state().values()),dtype=np.float32) for agent in self.agents}
 
-    def convert_space(self, space):
-        if isinstance(space, dict):
-            return Dict(space)
-        elif isinstance(space, Bounds):
-            return Box(low=space.low, high=space.high, shape=(1,), dtype=space.dtype)
-        else:
-            raise TypeError("observation space not supported")
+    # def convert_space(self, space):
+    #     if isinstance(space, dict):
+    #         return Dict(space)
+    #     elif isinstance(space, Bounds):
+    #         return Box(low=space.low, high=space.high, shape=(1,), dtype=space.dtype)
+    #     else:
+    #         raise TypeError("observation space not supported")
 
-    def get_observation_space(self):
+    def get_observation_space(self) -> Dict[str, Box]:
         return {name: bounds_to_gym_box(entity.get_observation_space()) for name, entity in self.entities.items()}
     
 
-    def get_action_space(self):
+    def get_action_space(self) -> Dict[str, Box]:
         return {name: bounds_to_gym_box(entity.get_action_space()) for name, entity in self.entities.items()}
 
 
-    def terminated(self):
+    def terminated(self) -> bool:
         return self.time_step == self.simulation_end_time_step - self.simulation_start_time_step - 1
     
+
+    def truncated(self) -> bool:
+        """Check if episode truncates due to a time limit or a reason that is not defined as part of the task MDP."""
+
+        return False
 
     @property
     def time_steps(self) -> int:
@@ -203,7 +219,13 @@ class EnergyNetEnv(ParallelEnv, Environment):
         return self.episode_tracker.episode_time_steps
     
 
-    def get_info(self):
+    @property
+    def episode(self) -> int:
+        """Current episode index."""
+
+        return self.episode_tracker.episode
+    
+    def get_info(self) -> dict:
         return {agent: {} for agent in self.agents}
         
 
