@@ -17,7 +17,7 @@ from ..network_agent import NetworkAgent
 from ..utils.env_utils import bounds_to_gym_box
 
 
-class EnergyNetEnv(ParallelEnv, Environment):
+class EnergyNetEnv(Environment, ParallelEnv):
 
     ##################
     # Pettingzoo API #
@@ -59,12 +59,6 @@ class EnergyNetEnv(ParallelEnv, Environment):
         self.__action_space = self.get_action_space()
 
 
-        # reset environment and initializes episode time steps
-        self.reset()
-
-        # reset episode tracker to start after initializing episode time steps during reset
-        self.episode_tracker.reset_episode_index()
-        
 
     def reset(self, seed=None, return_info=True, options=None):
         
@@ -196,11 +190,11 @@ class EnergyNetEnv(ParallelEnv, Environment):
     #     else:
     #         raise TypeError("observation space not supported")
 
-    def get_observation_space(self) -> Dict[str, Box]:
+    def get_observation_space(self) -> dict[str, Box]:
         return {name: bounds_to_gym_box(entity.get_observation_space()) for name, entity in self.entities.items()}
     
 
-    def get_action_space(self) -> Dict[str, Box]:
+    def get_action_space(self) -> dict[str, Box]:
         return {name: bounds_to_gym_box(entity.get_action_space()) for name, entity in self.entities.items()}
 
 

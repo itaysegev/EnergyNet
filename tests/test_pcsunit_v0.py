@@ -4,14 +4,14 @@ import warnings
 import numpy as np
 
 from energy_net.agents.SACAgent import SACAgent
-from energy_net.entities.params import StorageParams, ConsumptionParams, ProductionParams
+from energy_net.devices.params import StorageParams, ConsumptionParams, ProductionParams
 from energy_net.env.EnergyNetEnv import EnergyNetEnv
 from energy_net.model.action import EnergyAction, ProduceAction, StorageAction, ConsumeAction
-from energy_net.dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
-from energy_net.dynamics.production_dynamics import PVDynamics
-from energy_net.dynamics.storage_dynamics import BatteryDynamics
+from energy_net.dynamics.consumption_dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
+from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
+from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
 from energy_net.entities.pcsunit import PCSUnit
-from energy_net.entities.params import StorageParams, ConsumptionParams, ProductionParams
+from energy_net.devices.params import StorageParams, ConsumptionParams, ProductionParams
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 # Add the project's root directory to sys.path
 from energy_net.env.single_entity_v0 import gym_env

@@ -10,7 +10,7 @@ from .network_entity import  CompositeNetworkEntity
 from ..devices.storage_devices.local_storage import Battery
 from ..devices.consumption_devices.local_consumer import ConsumerDevice
 
-from ..entities.params import StorageParams, ProductionParams, ConsumptionParams
+from ..devices.params import StorageParams, ProductionParams, ConsumptionParams
 from ..devices.production_devices.local_producer import PrivateProducer
 
 class PCSUnit(CompositeNetworkEntity):

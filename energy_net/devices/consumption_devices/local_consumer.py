@@ -5,7 +5,7 @@ from ..device import Device
 from ...model.state import ConsumerState
 from ...model.action import ConsumeAction
 from ...config import MAX_ELECTRIC_POWER, MIN_POWER, MIN_EFFICIENCY, MAX_EFFICIENCY, NO_CONSUMPTION
-from ...entities.params import ConsumptionParams
+from ..params import ConsumptionParams
 
 class ConsumerDevice(Device):
     """Base consumer class.

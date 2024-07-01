@@ -2,13 +2,13 @@
 
 import numpy as np
 
-from ...entities.params import StorageParams
+from ..params import StorageParams
 from ...defs import Bounds
 from ...model.action import StorageAction
 from ..device import Device
 from ...config import MIN_CHARGE, MIN_EFFICIENCY, MAX_EFFICIENCY, MIN_CAPACITY, MAX_CAPACITY, INITIAL_TIME, MAX_TIME
 from ...model.state import StorageState
-from ...entities.params import DeviceParams, StorageParams
+from ..params import DeviceParams, StorageParams
 from ...config import DEFAULT_EFFICIENCY, NO_CHARGE, MAX_CAPACITY, MIN_CHARGE, MIN_EFFICIENCY, MIN_CAPACITY
 from ...model.state import State, StorageState
 
