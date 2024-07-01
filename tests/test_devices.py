@@ -67,8 +67,6 @@ class TestBattery(unittest.TestCase):
         self.assertEqual(self.battery.state, state)
        
   
-
-
 class TestPrivateProducer(unittest.TestCase):
     def setUp(self):
         producer_params = {
