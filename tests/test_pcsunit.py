@@ -1,9 +1,9 @@
 import unittest
 from energy_net.entities.pcsunit import PCSUnit
-from energy_net.entities.params import StorageParams, ProductionParams, ConsumptionParams
-from energy_net.dynamics.consumption_dynamics import ConsumptionDynamics
-from energy_net.dynamics.production_dynamics import PVDynamics
-from energy_net.dynamics.storage_dynamics import BatteryDynamics
+from energy_net.devices.params import StorageParams, ProductionParams, ConsumptionParams
+from energy_net.dynamics.consumption_dynamics.consumption_dynamics import ConsumptionDynamics
+from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
+from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 import numpy as np
 

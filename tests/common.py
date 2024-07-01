@@ -3,13 +3,13 @@ import json
 from pathlib import Path
 from typing import List
 
-from energy_net.entities.params import StorageParams, ProductionParams, ConsumptionParams
+from energy_net.devices.params import StorageParams, ProductionParams, ConsumptionParams
 from energy_net.entities.pcsunit import PCSUnit
-from energy_net.dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
+from energy_net.dynamics.consumption_dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
 from energy_net.network_entity import NetworkEntity
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
-from energy_net.dynamics.storage_dynamics import BatteryDynamics
-from energy_net.dynamics.production_dynamics import PVDynamics
+from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
+from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
 
 def example_pcsunit():
     # initialize consumer devices
