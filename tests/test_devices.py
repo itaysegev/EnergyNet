@@ -57,9 +57,12 @@ class TestBattery(unittest.TestCase):
     def test_step(self):
         state = self.battery.init_state
         self.battery.step(action=EnergyAction(charge=10))
-        state['charge'] = 60
+        state['state_of_charge'] = 60
+        state['current_time'] = 1
         self.assertEqual(self.battery.state, state)
         
+        state['state_of_charge'] = self.battery.energy_capacity
+        state['current_time'] = 2
         self.battery.step(action=EnergyAction(charge=150))
         self.assertEqual(self.battery.state, state)
        
