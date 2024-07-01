@@ -16,13 +16,12 @@ from ...model.state import State, StorageState
 class Battery(Device):
     """Base electricity storage class."""
     def __init__(self, storage_params: StorageParams):
-        self._state_of_charge = storage_params["initial_charge"] if storage_params["initial_charge"] is not None else NO_CHARGE
-        self._charging_efficiency = storage_params["charging_efficiency"] if storage_params["charging_efficiency"] is not None else DEFAULT_EFFICIENCY
-        self._discharging_efficiency = storage_params["discharging_efficiency"] if storage_params["discharging_efficiency"] is not None else DEFAULT_EFFICIENCY
-        self._energy_capacity = storage_params["energy_capacity"] if storage_params["energy_capacity"] is not None else MAX_CAPACITY
-        self._power_capacity = storage_params["power_capacity"] if storage_params["power_capacity"] is not None else MAX_CAPACITY
-        self.init_time = storage_params["initial_time"] if storage_params["initial_time"] is not None else INITIAL_TIME
-
+        self._state_of_charge = storage_params.get("initial_charge", NO_CHARGE)
+        self._charging_efficiency = storage_params.get("charging_efficiency", DEFAULT_EFFICIENCY)
+        self._discharging_efficiency = storage_params.get("discharging_efficiency", DEFAULT_EFFICIENCY)
+        self._energy_capacity = storage_params.get("energy_capacity", MAX_CAPACITY)
+        self._power_capacity = storage_params.get("power_capacity", MAX_CAPACITY)
+        self.init_time = storage_params.get("initial_time", INITIAL_TIME)
         init_state = StorageState(state_of_charge=self._state_of_charge, charging_efficiency=self._charging_efficiency, discharging_efficiency=self._discharging_efficiency, power_capacity=self._power_capacity, energy_capacity=self._energy_capacity, current_time=self.init_time)
         
         super().__init__(storage_params, init_state=init_state)

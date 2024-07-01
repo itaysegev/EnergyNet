@@ -42,7 +42,7 @@ class ConsumerDevice(Device):
 
     @property
     def current_state(self) -> ConsumerState:
-        return ConsumerState(max_electric_power=self.max_electric_power, efficiency=self.efficiency)
+        return ConsumerState(max_electric_power=self.max_electric_power, efficiency=self.efficiency, consumption=self.consumption)
     
     @property
     def efficiency(self) -> float:
@@ -52,9 +52,6 @@ class ConsumerDevice(Device):
     def efficiency(self, efficiency: float):
         assert efficiency >= MIN_EFFICIENCY, 'efficiency must be >= MIN_EFFICIENCY.'
         self._efficiency = efficiency
-    
-    def get_current_state(self) -> ConsumerState:
-        return self.current_state
     
 
     def update_state(self, state: ConsumerState):

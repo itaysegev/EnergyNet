@@ -55,6 +55,7 @@ class TestBattery(unittest.TestCase):
         np.testing.assert_array_equal(observation_space.low, low)
         np.testing.assert_array_equal(observation_space.high, high)
 
+
     def test_step_no_losses(self):
         b = self.battery
         #print('SoC:', b.state)
@@ -71,10 +72,18 @@ class TestBattery(unittest.TestCase):
             print('SoC after action: ', b.state)
             print('\n\n\n')
 
-        '''
-        state['charge'] = 60
+        
+
+    def test_step(self):
+        state = self.battery.init_state
+        self.battery.step(action=EnergyAction(charge=10))
+        state['state_of_charge'] = 60
+        state['current_time'] = 1
+
         self.assertEqual(self.battery.state, state)
         
+        state['state_of_charge'] = self.battery.energy_capacity
+        state['current_time'] = 2
         self.battery.step(action=EnergyAction(charge=150))
         self.assertEqual(self.battery.state, state)
 
@@ -82,7 +91,7 @@ class TestBattery(unittest.TestCase):
 
         for v in values
             self.battery.step(action=EnergyAction(charge=value))
-        '''
+      
 
     def test_step_with_losses(self):
         b = self.battery
@@ -93,7 +102,7 @@ class TestBattery(unittest.TestCase):
         print('SoC charge 10:', b.state)
 
 
-    ''' n = 20
+        n = 20
         for itr in range(n):
             v = random.uniform(-150, 150)
             print('SoC before action: ', b.state)
@@ -104,8 +113,6 @@ class TestBattery(unittest.TestCase):
 
        
   
-
-
 class TestPrivateProducer(unittest.TestCase):
     def setUp(self):
         producer_params = {

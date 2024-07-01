@@ -28,7 +28,7 @@ class NetworkEntity:
         self.name = name
 
     @abstractmethod
-    def step(self, actions: Union[np.ndarray, EnergyAction]):
+    def step(self, actions: Union[np.ndarray, EnergyAction]) -> None:
         """
         Perform the given action and return the new state and reward.
 
@@ -88,7 +88,7 @@ class ElementaryNetworkEntity(NetworkEntity):
         self.init_state = init_state
         self.energy_dynamics = energy_dynamics
 
-    def step(self, action: EnergyAction):
+    def step(self, action: EnergyAction) -> None:
         new_state = self.energy_dynamics.do(action=action, state=self.state)
         self.state = new_state
 
@@ -99,7 +99,7 @@ class ElementaryNetworkEntity(NetworkEntity):
         predicted_state = self.energy_dynamics.predict(action=action, state=state)
         return predicted_state
 
-    @abstractmethod
+
     def get_state(self) -> State:
         """
         Get the current state of the network entity.
@@ -107,7 +107,7 @@ class ElementaryNetworkEntity(NetworkEntity):
         Returns:
         State: The current state.
         """
-        pass
+        return self.state
     
   
          
@@ -135,21 +135,13 @@ class CompositeNetworkEntity(NetworkEntity):
         self.sub_entities = sub_entities
         self.agg_func = agg_func
 
-    def step(self, actions: dict[str, Union[np.ndarray,EnergyAction]]):
-        states = {}
+    def step(self, actions: dict[str, Union[np.ndarray, EnergyAction]]) -> None:
         for entity_name, action in actions.items():
             if type(action) is np.ndarray:
                 action = self.sub_entities[entity_name].action_type.from_numpy(action)
-            cur_state = self.sub_entities[entity_name].step(action)
-            if cur_state:
-                states[entity_name] = cur_state
-    
-        if self.agg_func:
-            agg_value = self.agg_func(states)
-            return agg_value
-        else:
-            return states
-
+            
+            self.sub_entities[entity_name].step(action)
+    # TODO: implement predict
     def predict(self, actions: Union[np.ndarray, dict[str, EnergyAction]]):
 
         predicted_states = {}
@@ -169,19 +161,15 @@ class CompositeNetworkEntity(NetworkEntity):
         else:
             return predicted_states
 
-    def get_joint_action(self)->dict[str, EnergyAction]:
-        pass
 
-    def apply_joint_action(self, joint_action:dict[str, EnergyAction]):
-            for entity in joint_action:
-                # get entity and apply the action
-                self.sub_entities[entity].step(joint_action[entity])
-
-
-    def get_state(self) -> State:
+    def get_state(self) -> dict[str, State]:
         state = {}
         for entity in self.sub_entities.values():
             state[entity.name] = entity.get_state()
+        
+        if self.agg_func:
+            state = self.agg_func(state)
+
         return state
     
     def reset(self) -> None:
@@ -189,17 +177,17 @@ class CompositeNetworkEntity(NetworkEntity):
             entity.reset()
 
 
-    def get_observation_space(self) -> Bounds:
-        obs_space = []
-        for entity in self.sub_entities.values():
-            obs_space.append(entity.get_observation_space())
+    def get_observation_space(self) -> dict[str, Bounds]:
+        obs_space = {}
+        for name, entity in self.sub_entities.items():
+            obs_space[name] = entity.get_observation_space()
         
         return obs_space
     
 
-    def get_action_space(self) -> Bounds:
-        action_space = []
-        for entity in self.sub_entities.values():
-            action_space.append(entity.get_action_space())
+    def get_action_space(self) -> dict[str, Bounds]:
+        action_space = {}
+        for name, entity in self.sub_entities.items():
+            action_space[name] = entity.get_action_space()
             
         return action_space
