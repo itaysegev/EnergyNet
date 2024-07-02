@@ -88,8 +88,8 @@ class ElementaryNetworkEntity(NetworkEntity):
         self.init_state = init_state
         self.energy_dynamics = energy_dynamics
 
-    def step(self, action: EnergyAction) -> None:
-        new_state = self.energy_dynamics.do(action=action, state=self.state)
+    def step(self, action: EnergyAction, params=None) -> None:
+        new_state = self.energy_dynamics.do(action=action, state=self.state, params=params)
         self.state = new_state
 
             

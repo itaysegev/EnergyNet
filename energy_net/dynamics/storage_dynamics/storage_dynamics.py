@@ -12,7 +12,7 @@ class BatteryDynamics(StorageDynamics):
     def __init__(self) -> None:
         super().__init__()
 
-    def do(self, action: EnergyAction, state: StorageState=None, params= None) -> StorageState:
+    def do(self, action: EnergyAction, state: StorageState=None, params=None) -> StorageState:
         
         """Perform action on battery.
             parameters
@@ -28,14 +28,23 @@ class BatteryDynamics(StorageDynamics):
 
         value = action["charge"] if isinstance(action, dict) else action
         lifetime_constant = DEFAULT_LIFETIME_CONSTANT
-        if params and 'lifetime_constant' in params:
-            lifetime_constant = params.get('lifetime_constant')
+        # Charging and discharging losses
+        if value > 0: # Charge
+            value = value * state['charging_efficiency']
+        else:
+            value = value * state['discharging_efficiency']
+
+        # Natural decay losses
+        if params:  # Not sure we need to check and 'lifetime_constant' in params, since I directly transfer the lifetime constant which is just a float
+            lifetime_constant = params  # Not sure we need params.get('lifetime_constant')
         if value is not None:
             new_state = state.copy()
-            if value > MIN_CHARGE: # Charge
+            if value > MIN_CHARGE:  # Charge
                 new_state['state_of_charge'] = min(state['state_of_charge'] + value, state['energy_capacity'])
             else: # Discharge
                 new_state['state_of_charge'] = max(state['state_of_charge'] + value, MIN_CHARGE)
+
+
 
             exp_mult = partial(self.exp_mult, state=state, lifetime_constant=lifetime_constant)
             new_state['energy_capacity'] = exp_mult(state['energy_capacity'])
@@ -56,8 +65,8 @@ class BatteryDynamics(StorageDynamics):
             return x  # or handle the zero division case in another way
         else:
             # Clamp the exponent value to prevent overflow
-            exponent = state.current_time / float(lifetime_constant)
-            exponent =  max(MIN_EXPONENT, min(MAX_EXPONENT, exponent))
+            exponent = state['current_time'] / float(lifetime_constant)
+            exponent = max(MIN_EXPONENT, min(MAX_EXPONENT, exponent))
             return x * np.exp(-exponent)
         
 

@@ -17,7 +17,7 @@ class EnergyDynamics():
         """
         self.dynamics_params = dynamics_params
     @abstractmethod
-    def do(self, action: EnergyAction, state:State = None):
+    def do(self, action: EnergyAction, state:State = None, params = None):
         pass
 
     @abstractmethod
