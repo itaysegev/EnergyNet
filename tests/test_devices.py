@@ -302,23 +302,32 @@ class TestBattery(unittest.TestCase):
 
         b.lifetime_constant = decay_constant
 
+        cap = b.state['energy_capacity']
+
         # Iterate with random values and apply efficiency
-        n = 100
+        n, time_tick = 100, 0
         for _ in range(n):
             v = random.uniform(-150, 150)
+            #print('random value ', v)
+            v = 100
             previous_state_of_charge = b.state['state_of_charge']
+            print(previous_state_of_charge)
             b.step(action=EnergyAction({'charge': v}), params=b.lifetime_constant)
+            print('after step ', b.state['state_of_charge'])
             if v > 0:
                 v = v * b.state['charging_efficiency']
             else:
                 v = v * b.state['discharging_efficiency']
             expected_state_after_random_action = previous_state_of_charge + v  # Adjust this based on actual logic
-            if expected_state_after_random_action > b.state['energy_capacity']:
-                expected_state_after_random_action = b.state['energy_capacity']
+            if expected_state_after_random_action > cap:
+                expected_state_after_random_action = cap
             elif expected_state_after_random_action < 0:
                 expected_state_after_random_action = 0
+            print('expected_state_after_random_action', expected_state_after_random_action)
 
-            expected_state_after_random_action = expected_state_after_random_action * np.exp(-decay_constant) # decay
+            exponent = time_tick / float(decay_constant)
+            exponent = max(-200, min(200, exponent))
+            cap = cap * np.exp(-exponent)
 
             self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
 

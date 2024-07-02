@@ -49,8 +49,10 @@ class BatteryDynamics(StorageDynamics):
             exp_mult = partial(self.exp_mult, state=state, lifetime_constant=lifetime_constant)
             new_state['energy_capacity'] = exp_mult(state['energy_capacity'])
             new_state['power_capacity'] = exp_mult(state['power_capacity'])
-            new_state['charging_efficiency'] = exp_mult(state['charging_efficiency'])
-            new_state['discharging_efficiency'] = exp_mult(state['discharging_efficiency'])
+            #new_state['charging_efficiency'] = exp_mult(state['charging_efficiency'])
+            new_state['charging_efficiency'] = state['charging_efficiency']
+            #new_state['discharging_efficiency'] = exp_mult(state['discharging_efficiency'])
+            new_state['discharging_efficiency'] = state['discharging_efficiency']
             new_state['current_time'] = move_time_tick(new_state['current_time'])
             return new_state	
         else:
