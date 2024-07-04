@@ -91,6 +91,7 @@ class Battery(Device):
         super().reset()
         self.reset_time()
 
+    '''
     @property
     def current_state(self) -> StorageState:
         return StorageState(
@@ -104,6 +105,7 @@ class Battery(Device):
     
     def get_current_state(self) -> StorageState:
         return self.current_state
+   '''
     
     def update_state(self, state: StorageState) -> None:
         self.energy_capacity = state['energy_capacity']
