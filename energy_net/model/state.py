@@ -11,8 +11,8 @@ class StorageState(State):
     state_of_charge:float = DEFAULT_INIT_POWER
     charging_efficiency:float = DEFAULT_EFFICIENCY
     discharging_efficiency:float = DEFAULT_EFFICIENCY
-    power_capacity:float
-    energy_capacity:float
+    power_capacity:float = DEFAULT_INIT_POWER
+    energy_capacity:float = DEFAULT_INIT_POWER
 
 
 class ProducerState(State):
@@ -24,5 +24,8 @@ class ConsumerState(State):
     max_electric_power:float = MAX_ELECTRIC_POWER
     efficiency:float = DEFAULT_EFFICIENCY
     consumption:float = NO_CONSUMPTION
+
+class PSCUnitState(StorageState, ConsumerState, ProducerState):
+    name:str = 'PSCUnit'
 
 
