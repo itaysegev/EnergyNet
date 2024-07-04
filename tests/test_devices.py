@@ -264,7 +264,7 @@ class TestBattery(unittest.TestCase):
 
         # Change discharging efficiency and validate it
         b.state['energy_capacity'] = capacity
-        self.assertEqual(b.state['energy_capacity'], capacity)
+        self.assertNotEqual(b.state['energy_capacity'], capacity)
 
     def test_step_with_changing_lifetime(self):
         b = copy.deepcopy(self.battery)

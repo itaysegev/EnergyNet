@@ -38,48 +38,25 @@ class PCSUnit(CompositeNetworkEntity):
 
 
     def get_observation_space(self) -> Bounds:
-
+        storage_state = self.storage_device.get_observation_space()
+        consumption_state = self.consumer_device.get_observation_space()
+        production_state = self.private_producer.get_observation_space()
         return NotImplemented
 
 
     def get_action_space(self) -> Bounds:
-        storage_devices_action_sapces = [v.get_action_space() for v in self.get_storage_devices().values()]
-        
-        # Combine the Bounds objects into a single Bound object
-        combined_low = np.array([bound['low'] for bound in storage_devices_action_sapces])
-        combined_high = np.array([bound['high'] for bound in storage_devices_action_sapces])
-        return Bounds(low=combined_low, high=combined_high, shape=(len(combined_low),),  dtype=np.float32)
+        storage_state = self.storage_device.get_action_space()
+        consumption_state = self.consumer_device.get_action_space()
+        production_state = self.private_producer.get_action_space()
+        return NotImplemented
 
 
     def reset(self) -> State:
-        # return self.apply_func_to_sub_entities(lambda entity: entity.reset())
-        self._state = self._init_state
-        self._state['pred_consumption'] = self.predict_next_consumption()
-        for entity in self.sub_entities.values():
-            entity.reset()
-        return self._state
+        self.storage_device.reset()
+        self.consumer_device.reset()
+        self.private_producer.reset()
 
-
-    def get_storage_devices(self):
-        return self.apply_func_to_sub_entities(lambda entity: entity, condition=lambda x: isinstance(x, Battery))
-    
-    def validate_action(self, actions: dict[str, EnergyAction]):
-        for entity_name, action in actions.items():
-            if len(action) > 1 or 'charge' not in action.keys():
-                raise ValueError(f"Invalid action key {action.keys()} for entity {entity_name}")
-            else:
-                return True
-
-
-    def apply_func_to_sub_entities(self, func, condition=lambda x: True):
-        results = {}
-        for name, entity in self.sub_entities.items():
-            if condition(entity):
-                results[name] = func(entity)
-        return results
-
-    def get_next_consumption(self) -> float:
-        return sum([self.sub_entities[name].predict_next_consumption() for name in self.consumption_keys])
+    def update_state(self):
 
 
 
