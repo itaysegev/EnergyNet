@@ -27,6 +27,11 @@ class BatteryDynamics(StorageDynamics):
             return : BatteryState
                 New state of charge in [kWh].
         """
+        # Check device parameters
+        assert state['energy_capacity'] >= 0, "energy capacity must be greater than zero."
+        assert state['charging_efficiency'] >= 0 and state['charging_efficiency'] < 1, "charging efficiency must be between 0 and 1."
+        assert state['discharging_efficiency'] >= 0 and state[
+            'discharging_efficiency'] < 1, "discharging_efficiency efficiency must be between 0 and 1."
 
         value = action["charge"] if isinstance(action, dict) else action
         

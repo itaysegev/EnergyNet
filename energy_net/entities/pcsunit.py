@@ -56,8 +56,6 @@ class PCSUnit(CompositeNetworkEntity):
         self.consumer_device.reset()
         self.private_producer.reset()
 
-    def update_state(self):
-
 
 
 
