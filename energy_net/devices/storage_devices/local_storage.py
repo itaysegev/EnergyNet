@@ -90,22 +90,6 @@ class Battery(Device):
         self._state_of_charge = self.init_state['state_of_charge']
         super().reset()
         self.reset_time()
-
-    '''
-    @property
-    def current_state(self) -> StorageState:
-        return StorageState(
-            energy_capacity=self.energy_capacity, 
-            power_capacity=self.power_capacity,
-            state_of_charge=self.state_of_charge, 
-            charging_efficiency=self.charging_efficiency,
-            discharging_efficiency=self.discharging_efficiency, 
-            current_time=self.current_time
-        )
-    
-    def get_current_state(self) -> StorageState:
-        return self.current_state
-   '''
     
     def update_state(self, state: StorageState) -> None:
         self.energy_capacity = state['energy_capacity']
