@@ -58,7 +58,7 @@ class Battery(Device):
     @charging_efficiency.setter
     def charging_efficiency(self, charging_efficiency: float):
         charging_efficiency = DEFAULT_EFFICIENCY if charging_efficiency is None else charging_efficiency
-        assert charging_efficiency > MIN_EFFICIENCY, 'charging_efficiency must be > 0.'
+        assert charging_efficiency > MIN_EFFICIENCY and charging_efficiency < MAX_EFFICIENCY, 'charging_efficiency must be between 0 and 1.'
         self._charging_efficiency = charging_efficiency
 
     @property
@@ -69,7 +69,7 @@ class Battery(Device):
     @discharging_efficiency.setter
     def discharging_efficiency(self, discharging_efficiency: float):
         discharging_efficiency = DEFAULT_EFFICIENCY if discharging_efficiency is None else discharging_efficiency
-        assert discharging_efficiency > MIN_EFFICIENCY, 'discharging_efficiency must be > 0.'
+        assert discharging_efficiency > MIN_EFFICIENCY and discharging_efficiency < MAX_EFFICIENCY, 'discharging_efficiency must be between 0 and 1.'
         self._discharging_efficiency = discharging_efficiency
 
     @property

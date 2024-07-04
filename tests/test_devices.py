@@ -1,3 +1,4 @@
+import copy
 import random
 import unittest
 import math
@@ -56,280 +57,244 @@ class TestBattery(unittest.TestCase):
         np.testing.assert_array_equal(observation_space.high, high)
 
 
-    def test_step_no_losses(self):
-        b = self.battery
-        initial_state = b.state  # Save initial state for comparison
-
-        # Step with a fixed action
-        b.step(action=EnergyAction({'charge': 10}))
-        expected_state_after_charge = initial_state + 10  # Adjust this based on actual logic
-        self.assertEqual(b.state, expected_state_after_charge)
-
-        # Iterate with random values
-        n = 20
-        for _ in range(n):
-            v = random.uniform(-150, 150)
-            previous_state = b.state
+    def dynamics_loop_test(self, b, bound, chg_eff,  dis_eff, capacity, decay_constant=None):
+        v = random.uniform(-bound, bound)
+        previous_state_of_charge = b.state['state_of_charge']
+        if decay_constant is None:
             b.step(action=EnergyAction({'charge': v}))
-            expected_state_after_random_action = previous_state + v  # Adjust this based on actual logic
-            self.assertEqual(b.state, expected_state_after_random_action)
+        else:
+            b.step(action=EnergyAction({'charge': v}), params=decay_constant)
+        if v > 0:
+            v = v * chg_eff
+        else:
+            v = v * dis_eff
+        expected_state_after_random_action = previous_state_of_charge + v  # Adjust this based on actual logic
+        if expected_state_after_random_action > capacity:
+            expected_state_after_random_action = capacity
+        elif expected_state_after_random_action < 0:
+            expected_state_after_random_action = 0
+        return expected_state_after_random_action
 
-        
 
-    def test_step(self):
-        state = self.battery.init_state
-        self.battery.step(action=EnergyAction(charge=10))
-        state['state_of_charge'] = 60
-        state['current_time'] = 1
+    def test_step_no_losses(self):
+        b = copy.deepcopy(self.battery)
 
-        self.assertEqual(self.battery.state, state)
-        
-        state['state_of_charge'] = self.battery.energy_capacity
-        state['current_time'] = 2
-        self.battery.step(action=EnergyAction(charge=150))
-        self.assertEqual(self.battery.state, state)
+        # Device properties
+        chg_eff = b.state['discharging_efficiency']
+        dis_eff = b.state['discharging_efficiency']
+        capacity = b.state['energy_capacity']
+
+        bound = 1.2 * b.energy_capacity
+
+        # Iterate with random values and apply efficiency
+        n = 100
+        for _ in range(n):
+            expected_state_after_random_action = self.dynamics_loop_test(b=b, bound=bound, chg_eff=chg_eff, dis_eff=dis_eff, capacity=capacity)
+            self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
+
 
     def test_step_with_changing_discharging_efficiency(self):
-        b = self.battery
-        initial_state = b.state  # Save initial state for comparison
+        b = copy.deepcopy(self.battery)
 
-        dis_eff = 0.7
+        # Device properties
+        chg_eff = b.state['discharging_efficiency']
+        dis_eff = b.state['discharging_efficiency']
+        capacity = b.state['energy_capacity']
 
-        # Change discharging efficiency and validate it
-        # b.discharging_efficiency = 0.5 # TODO: Notice that this command doesnt affect the state that is passed to the dynamics.do function
-        b.state['discharging_efficiency'] = dis_eff
-        self.assertEqual(b.state['discharging_efficiency'], dis_eff)
-
-        # Perform a fixed action with discharging efficiency applied
-        b.step(action=EnergyAction({'charge': -10}))
-        expected_state_after_charge = initial_state['state_of_charge'] - 10 * dis_eff  # Adjust this based on actual logic
-        self.assertEqual(b.state['state_of_charge'], expected_state_after_charge)
-
-        # Iterate with random values and apply efficiency
-        n = 20
-        for _ in range(n):
-            v = random.uniform(-150, 150)
-            previous_state_of_charge = b.state['state_of_charge']
-            b.step(action=EnergyAction({'charge': v}))
-            if v > 0:
-                v = v * b.state['charging_efficiency']
-            else:
-                v = v * b.state['discharging_efficiency']
-            expected_state_after_random_action = previous_state_of_charge + v  # Adjust this based on actual logic
-            if expected_state_after_random_action > b.state['energy_capacity']:
-                expected_state_after_random_action = b.state['energy_capacity']
-            elif expected_state_after_random_action < 0:
-                expected_state_after_random_action = 0
-
-            self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
-
-            if n % 5 == 0:
-                b.state['discharging_efficiency'] = dis_eff * 0.5
-                self.assertEqual(b.state['discharging_efficiency'], dis_eff * 0.5)
-
-
-    def test_step_with_changing_charging_efficiency(self):
-        b = self.battery
-        initial_state = b.state  # Save initial state for comparison
-
-        chg_eff = 0.7
-
-        # Change discharging efficiency and validate it
-        # b.discharging_efficiency = 0.5 # TODO: Notice that this command doesnt affect the state that is passed to the dynamics.do function
-        b.state['charging_efficiency'] = chg_eff
-        self.assertEqual(b.state['charging_efficiency'], chg_eff)
-
-        # Iterate with random values and apply efficiency
-        n = 100
-        for _ in range(n):
-            v = random.uniform(-150, 150)
-            previous_state_of_charge = b.state['state_of_charge']
-            b.step(action=EnergyAction({'charge': v}))
-            if v > 0:
-                v = v * b.state['charging_efficiency']
-            else:
-                v = v * b.state['discharging_efficiency']
-            expected_state_after_random_action = previous_state_of_charge + v  # Adjust this based on actual logic
-            if expected_state_after_random_action > b.state['energy_capacity']:
-                expected_state_after_random_action = b.state['energy_capacity']
-            elif expected_state_after_random_action < 0:
-                expected_state_after_random_action = 0
-
-            self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
-
-            if n % 5 == 0:
-                b.state['charging_efficiency'] = chg_eff * 0.5
-                self.assertEqual(b.state['charging_efficiency'], chg_eff * 0.5)
-
-    def test_step_with_changing_efficiencies(self):
-        b = self.battery
-        initial_state = b.state  # Save initial state for comparison
-
-        chg_eff = 0.7
-        dis_eff = 0.8
-
-        # Change discharging efficiency and validate it
-        # b.discharging_efficiency = 0.5 # TODO: Notice that this command doesnt affect the state that is passed to the dynamics.do function
-        b.state['charging_efficiency'] = chg_eff
-        self.assertEqual(b.state['charging_efficiency'], chg_eff)
-
-        b.state['discharging_efficiency'] = dis_eff
-        self.assertEqual(b.state['discharging_efficiency'], dis_eff)
-
-        # Iterate with random values and apply efficiency
-        n = 100
-        for _ in range(n):
-            v = random.uniform(-150, 150)
-            previous_state_of_charge = b.state['state_of_charge']
-            b.step(action=EnergyAction({'charge': v}))
-            if v > 0:
-                v = v * b.state['charging_efficiency']
-            else:
-                v = v * b.state['discharging_efficiency']
-            expected_state_after_random_action = previous_state_of_charge + v  # Adjust this based on actual logic
-            if expected_state_after_random_action > b.state['energy_capacity']:
-                expected_state_after_random_action = b.state['energy_capacity']
-            elif expected_state_after_random_action < 0:
-                expected_state_after_random_action = 0
-
-            self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
-
-            if n % 5 == 0:
-                b.state['charging_efficiency'] = chg_eff * 0.5
-                self.assertEqual(b.state['charging_efficiency'], chg_eff * 0.5)
-
-                b.state['discharging_efficiency'] = dis_eff * 0.5
-                self.assertEqual(b.state['discharging_efficiency'], dis_eff * 0.5)
-
-
-    def test_step_with_changing_capacity(self):
-        b = self.battery
-        initial_state = b.state  # Save initial state for comparison
-
-        new_capacity = 200
-
-        # Change discharging efficiency and validate it
-        # b.discharging_efficiency = 0.5 # TODO: Notice that this command doesnt affect the state that is passed to the dynamics.do function
-        b.state['energy_capacity'] = new_capacity
-        self.assertEqual(b.state['energy_capacity'], new_capacity)
-
+        bound = 1.2 * b.energy_capacity
 
         # Iterate with random values and apply efficiency
         n = 100
         for i in range(n):
-            v = random.uniform(-300, 300)
-            print('random value ', v)
-            previous_state_of_charge = b.state['state_of_charge']
-            print('previous_state_of_charge ', previous_state_of_charge)
-            b.step(action=EnergyAction({'charge': v}))
-            if v > 0:
-                v = v * b.state['charging_efficiency']
-            else:
-                v = v * b.state['discharging_efficiency']
-            print('value after losses ', v)
-            expected_state_after_random_action = previous_state_of_charge + v  # Adjust this based on actual logic
-            if expected_state_after_random_action > b.state['energy_capacity']:
-                expected_state_after_random_action = b.state['energy_capacity']
-            elif expected_state_after_random_action < 0:
-                expected_state_after_random_action = 0
-
+            expected_state_after_random_action = self.dynamics_loop_test(b=b, bound=bound, chg_eff=chg_eff,
+                                                                         dis_eff=dis_eff, capacity=capacity)
             self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
 
+            # Update discharge efficiency
+            if i % 5 == 0:
+                dis_eff = dis_eff * 0.5
+                b.state['discharging_efficiency'] = dis_eff
+                self.assertEqual(b.state['discharging_efficiency'], dis_eff)
 
-            print(i, b.state['energy_capacity'], b.state['state_of_charge'])
-            print('\n\n')
+    def test_step_with_changing_charging_efficiency(self):
+        b = copy.deepcopy(self.battery)
 
-            if n % 5 == 0:
-                b.state['energy_capacity'] = new_capacity * 0.9
-                self.assertEqual(b.state['energy_capacity'], new_capacity * 0.9)
+        # Device properties
+        chg_eff = b.state['discharging_efficiency']
+        dis_eff = b.state['discharging_efficiency']
+        capacity = b.state['energy_capacity']
 
-
-    def test_step_with_changing_capacity_and_efficiencies(self):
-        b = self.battery
-        initial_state = b.state  # Save initial state for comparison
-
-        chg_eff = 0.7
-        dis_eff = 0.8
-        new_capacity = 80
-
-        # Change discharging efficiency and validate it
-        # b.discharging_efficiency = 0.5 # TODO: Notice that this command doesnt affect the state that is passed to the dynamics.do function
-        b.state['charging_efficiency'] = chg_eff
-        self.assertEqual(b.state['charging_efficiency'], chg_eff)
-
-        b.state['discharging_efficiency'] = dis_eff
-        self.assertEqual(b.state['discharging_efficiency'], dis_eff)
-
-        # Change discharging efficiency and validate it
-        # b.discharging_efficiency = 0.5 # TODO: Notice that this command doesnt affect the state that is passed to the dynamics.do function
-        b.state['energy_capacity'] = new_capacity
-        self.assertEqual(b.state['energy_capacity'], new_capacity)
+        bound = 1.2 * b.energy_capacity
 
         # Iterate with random values and apply efficiency
         n = 100
-        for _ in range(n):
-            v = random.uniform(-150, 150)
-            previous_state_of_charge = b.state['state_of_charge']
-            b.step(action=EnergyAction({'charge': v}))
-            if v > 0:
-                v = v * b.state['charging_efficiency']
-            else:
-                v = v * b.state['discharging_efficiency']
-            expected_state_after_random_action = previous_state_of_charge + v  # Adjust this based on actual logic
-            if expected_state_after_random_action > b.state['energy_capacity']:
-                expected_state_after_random_action = b.state['energy_capacity']
-            elif expected_state_after_random_action < 0:
-                expected_state_after_random_action = 0
-
+        for i in range(n):
+            expected_state_after_random_action = self.dynamics_loop_test(b=b, bound=bound, chg_eff=chg_eff,
+                                                                         dis_eff=dis_eff, capacity=capacity)
             self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
 
-            if n % 5 == 0:
-                b.state['charging_efficiency'] = chg_eff * 0.5
-                self.assertEqual(b.state['charging_efficiency'], chg_eff * 0.5)
+            # Update charging efficiency
+            if i % 5 == 0:
+                chg_eff = chg_eff * 0.5
+                b.state['charging_efficiency'] = chg_eff
+                self.assertEqual(b.state['charging_efficiency'], chg_eff)
 
-                b.state['discharging_efficiency'] = dis_eff * 0.5
-                self.assertEqual(b.state['discharging_efficiency'], dis_eff * 0.5)
+    def test_step_with_changing_efficiencies(self):
+        b = copy.deepcopy(self.battery)
 
-                b.state['energy_capacity'] = new_capacity * 0.9
-                self.assertEqual(b.state['energy_capacity'], new_capacity * 0.9)
+        # Device properties
+        chg_eff = b.state['discharging_efficiency']
+        dis_eff = b.state['discharging_efficiency']
+        capacity = b.state['energy_capacity']
 
+        bound = 1.2 * capacity
+
+        # Iterate with random values and apply efficiency
+        n = 100
+        for i in range(n):
+            expected_state_after_random_action = self.dynamics_loop_test(b=b, bound=bound, chg_eff=chg_eff,
+                                                                         dis_eff=dis_eff, capacity=capacity)
+            self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
+
+            # Update charging efficiency
+            if i % 5 == 0:
+                chg_eff = chg_eff * 0.5
+                b.state['charging_efficiency'] = chg_eff
+                self.assertEqual(b.state['charging_efficiency'], chg_eff)
+
+                dis_eff = dis_eff * 0.5
+                b.state['discharging_efficiency'] = dis_eff
+                self.assertEqual(b.state['discharging_efficiency'], dis_eff)
+
+
+    def test_step_with_changing_capacity(self):
+        b = copy.deepcopy(self.battery)
+
+        # Device properties
+        chg_eff = b.state['discharging_efficiency']
+        dis_eff = b.state['discharging_efficiency']
+        capacity = b.state['energy_capacity']
+
+        bound = 1.2 * capacity
+
+        # Iterate with random values and apply efficiency
+        n = 100
+        for i in range(n):
+            expected_state_after_random_action = self.dynamics_loop_test(b=b, bound=bound, chg_eff=chg_eff,
+                                                                         dis_eff=dis_eff, capacity=capacity)
+            self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
+
+            # Update charging efficiency
+            if i % 5 == 0:
+                capacity = capacity * 0.9
+                b.state['energy_capacity'] = capacity
+                self.assertEqual(b.state['energy_capacity'], capacity)
+
+
+    def test_step_with_changing_capacity_and_efficiencies(self):
+        b = copy.deepcopy(self.battery)
+
+        # Device properties
+        chg_eff = b.state['discharging_efficiency']
+        dis_eff = b.state['discharging_efficiency']
+        capacity = b.state['energy_capacity']
+
+        bound = 1.2 * capacity
+
+        # Iterate with random values and apply efficiency
+        n = 100
+        for i in range(n):
+            expected_state_after_random_action = self.dynamics_loop_test(b=b, bound=bound, chg_eff=chg_eff,
+                                                                         dis_eff=dis_eff, capacity=capacity)
+            self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
+
+            # Update efficiencies and capacity
+            if i == 20:
+                chg_eff = chg_eff * 0.5
+                dis_eff = dis_eff * 0.5
+                capacity = capacity * 0.97
+
+                b.state['charging_efficiency'] = chg_eff
+                self.assertEqual(b.state['charging_efficiency'], chg_eff)
+
+                b.state['discharging_efficiency'] = dis_eff
+                self.assertEqual(b.state['discharging_efficiency'], dis_eff)
+
+                b.state['energy_capacity'] = capacity
+                self.assertEqual(b.state['energy_capacity'], capacity)
+
+    def test_step_with_invalid_upper_bound_discharging_efficiency(self):
+        b = copy.deepcopy(self.battery)
+
+        dis_eff = 1.2
+
+        # Change discharging efficiency and validate it
+        b.state['discharging_efficiency'] = dis_eff
+        self.assertEqual(b.state['discharging_efficiency'], dis_eff)
+
+    def test_step_with_invalid_lower_bound_discharging_efficiency(self):
+        b = copy.deepcopy(self.battery)
+
+        dis_eff = 1.2
+
+        # Change discharging efficiency and validate it
+        b.state['discharging_efficiency'] = dis_eff
+        self.assertEqual(b.state['discharging_efficiency'], dis_eff)
+
+    def test_step_with_invalid_upper_bound_charging_efficiency(self):
+        b = copy.deepcopy(self.battery)
+
+        chg_eff = 1.2
+
+        # Change discharging efficiency and validate it
+        b.state['charging_efficiency'] = chg_eff
+        self.assertEqual(b.state['charging_efficiency'], chg_eff)
+
+    def test_step_with_invalid_lower_bound_charging_efficiency(self):
+        b = copy.deepcopy(self.battery)
+
+        chg_eff = -1.2
+
+        # Change discharging efficiency and validate it
+        b.state['charging_efficiency'] = chg_eff
+        self.assertEqual(b.state['charging_efficiency'], chg_eff)
+
+    def test_step_with_invalid_capacity(self):
+        b = copy.deepcopy(self.battery)
+
+        capacity = -100
+
+        # Change discharging efficiency and validate it
+        b.state['energy_capacity'] = capacity
+        self.assertEqual(b.state['energy_capacity'], capacity)
 
     def test_step_with_changing_lifetime(self):
-        b = self.battery
-        initial_state = b.state  # Save initial state for comparison
+        b = copy.deepcopy(self.battery)
 
-        decay_constant = 0.1
+        # Device properties
+        chg_eff = b.state['discharging_efficiency']
+        dis_eff = b.state['discharging_efficiency']
+        capacity = b.state['energy_capacity']
+
+        bound = 1.2 * capacity
+
+        decay_constant = 0.01
 
         b.lifetime_constant = decay_constant
 
-        cap = b.state['energy_capacity']
-
         # Iterate with random values and apply efficiency
-        n, time_tick = 100, 0
-        for _ in range(n):
-            v = random.uniform(-150, 150)
-            #print('random value ', v)
-            v = 100
-            previous_state_of_charge = b.state['state_of_charge']
-            print(previous_state_of_charge)
-            b.step(action=EnergyAction({'charge': v}), params=b.lifetime_constant)
-            print('after step ', b.state['state_of_charge'])
-            if v > 0:
-                v = v * b.state['charging_efficiency']
-            else:
-                v = v * b.state['discharging_efficiency']
-            expected_state_after_random_action = previous_state_of_charge + v  # Adjust this based on actual logic
-            if expected_state_after_random_action > cap:
-                expected_state_after_random_action = cap
-            elif expected_state_after_random_action < 0:
-                expected_state_after_random_action = 0
-            print('expected_state_after_random_action', expected_state_after_random_action)
-
-            exponent = time_tick / float(decay_constant)
-            exponent = max(-200, min(200, exponent))
-            cap = cap * np.exp(-exponent)
-
+        n = 20
+        for i in range(n):
+            expected_state_after_random_action = self.dynamics_loop_test(b=b, bound=bound, chg_eff=chg_eff,
+                                                                         dis_eff=dis_eff, capacity=capacity,
+                                                                         decay_constant={'lifetime_constant': decay_constant})
             self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
+
+            exponent = i / float(decay_constant)
+            exponent = max(-200, min(200, exponent))
+            capacity = capacity * np.exp(-exponent)
+
+            self.assertEqual(b.state['energy_capacity'], capacity)
 
 
        
