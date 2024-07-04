@@ -228,7 +228,7 @@ class TestBattery(unittest.TestCase):
 
         # Change discharging efficiency and validate it
         b.state['discharging_efficiency'] = dis_eff
-        self.assertEqual(b.state['discharging_efficiency'], dis_eff)
+        self.assertNotEqual(b.state['discharging_efficiency'], dis_eff)
 
     def test_step_with_invalid_lower_bound_discharging_efficiency(self):
         b = copy.deepcopy(self.battery)
@@ -237,7 +237,7 @@ class TestBattery(unittest.TestCase):
 
         # Change discharging efficiency and validate it
         b.state['discharging_efficiency'] = dis_eff
-        self.assertEqual(b.state['discharging_efficiency'], dis_eff)
+        self.assertNotEqual(b.state['discharging_efficiency'], dis_eff)
 
     def test_step_with_invalid_upper_bound_charging_efficiency(self):
         b = copy.deepcopy(self.battery)
@@ -246,7 +246,7 @@ class TestBattery(unittest.TestCase):
 
         # Change discharging efficiency and validate it
         b.state['charging_efficiency'] = chg_eff
-        self.assertEqual(b.state['charging_efficiency'], chg_eff)
+        self.assertNotEqual(b.state['charging_efficiency'], chg_eff)
 
     def test_step_with_invalid_lower_bound_charging_efficiency(self):
         b = copy.deepcopy(self.battery)
@@ -255,7 +255,7 @@ class TestBattery(unittest.TestCase):
 
         # Change discharging efficiency and validate it
         b.state['charging_efficiency'] = chg_eff
-        self.assertEqual(b.state['charging_efficiency'], chg_eff)
+        self.assertNotEqual(b.state['charging_efficiency'], chg_eff)
 
     def test_step_with_invalid_capacity(self):
         b = copy.deepcopy(self.battery)
