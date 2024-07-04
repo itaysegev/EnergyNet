@@ -6,11 +6,9 @@ import math
 import numpy as np
 
 from energy_net.devices.storage_devices.local_storage import Battery
-from energy_net.devices.production_devices.local_producer import PrivateProducer
-from energy_net.devices.consumption_devices.local_consumer import ConsumerDevice
+
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
-from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
-from energy_net.dynamics.consumption_dynamics.consumption_dynamics import ElectricHeaterDynamics
+
 from energy_net.model.action import EnergyAction
 from energy_net.defs import Bounds
 
@@ -63,7 +61,7 @@ class TestBattery(unittest.TestCase):
         if decay_constant is None:
             b.step(action=EnergyAction({'charge': v}))
         else:
-            b.step(action=EnergyAction({'charge': v}), params=decay_constant)
+            b.step(action=EnergyAction({'charge': v}), lifetime_constant=decay_constant)
         if v > 0:
             v = v * chg_eff
         else:
@@ -287,7 +285,7 @@ class TestBattery(unittest.TestCase):
         for i in range(n):
             expected_state_after_random_action = self.dynamics_loop_test(b=b, bound=bound, chg_eff=chg_eff,
                                                                          dis_eff=dis_eff, capacity=capacity,
-                                                                         decay_constant={'lifetime_constant': decay_constant})
+                                                                         decay_constant=decay_constant)
             self.assertEqual(b.state['state_of_charge'], expected_state_after_random_action)
 
             exponent = i / float(decay_constant)
