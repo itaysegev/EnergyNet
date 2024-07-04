@@ -13,148 +13,72 @@ from ..devices.consumption_devices.local_consumer import ConsumerDevice
 from ..devices.params import StorageParams, ProductionParams, ConsumptionParams
 from ..devices.production_devices.local_producer import PrivateProducer
 
+from ..utils.utils import AggFunc
+
 class PCSUnit(CompositeNetworkEntity):
     """ A network entity that contains a list of sub-entities. The sub-entities are the devices and the pcsunit itself is the composite entity.
     The PCSUnit entity is responsible for managing the sub-entities and aggregating the reward.
     """
-    def __init__(self, name: str, consumption_params_dict:dict[str,ConsumptionParams]=None, storage_params_dict:dict[str,StorageParams]=None, production_params_dict:dict[str,ProductionParams]=None, agg_func=None):
 
-        # holding the elements that should be considered for consumption, production and storage actions
-        consumption_dict = {name: ConsumerDevice(params) for name, params in consumption_params_dict.items()}
-        self.consumption_keys = list(consumption_dict.keys())
-        storage_dict = {name: Battery(storage_params=params, init_time=INITIAL_TIME) for name, params in storage_params_dict.items()}
-        self.storage_keys = list(storage_dict.keys())
-        production_dict = {name: PrivateProducer(params) for name, params in production_params_dict.items()}
-        self.production_keys = list(production_dict.keys())
+    def __init__(self, name: str, sub_entities: dict[str, Battery, ConsumerDevice, PrivateProducer] = None, agg_func: AggFunc = None):
+        super().__init__(name)
+        self.sub_entities = sub_entities
+        self.agg_func = agg_func
 
-        # the base class holds the entities in a single array
-        sub_entities = {**consumption_dict, **storage_dict, **production_dict}
-        super().__init__(name=name, sub_entities=sub_entities, agg_func=agg_func)
+    def step(self, actions: dict[str, Union[np.ndarray, EnergyAction]], **kwargs) -> None:
+        for entity_name, action in actions.items():
+            if type(action) is np.ndarray:
+                action = self.sub_entities[entity_name].action_type.from_numpy(action)
 
+            self.sub_entities[entity_name].step(action, **kwargs)
 
-        inital_soc = sum(s.state['state_of_charge'] for s in self.get_storage_devices().values())
-        
-        # TODO: Define pcsunit state
-        self._init_state = State(storage=inital_soc, curr_consumption=NO_CONSUMPTION, pred_consumption=0)
-        self._state = self._init_state
+    def predict(self, actions: Union[np.ndarray, dict[str, EnergyAction]]):
 
-    def perform_joint_action(self, actions:dict[str, EnergyAction]):
-        super().step(actions)
+        predicted_states = {}
+        if type(actions) is np.ndarray:
+            # we convert the entity dict to a list and match action to entities by index
+            sub_entities = list(self.sub_entities.values())
+            for entity_index, action in enumerate(actions):
+                predicted_states[sub_entities[entity_index].name] = sub_entities[entity_index].predict(
+                    np.array([action]))
 
-    def step(self, action: Union[np.ndarray, StorageAction]):
-        # storage action
-        action = StorageAction.from_numpy(action) if type(action) == np.ndarray else action
-        current_storage = action['charge']
-        current_consumption = self._state['curr_consumption']
-        # this is how much we buy/sell to the grid
-        pg = current_consumption+current_storage
+        else:
+            for entity_name, action in actions.items():
+                predicted_states[entity_name] = self.sub_entities[entity_name].predict(action)
 
-        actions = {self.consumption_keys[0]: ConsumeAction(consume=current_consumption),self.storage_keys[0]: action}
-        super().step(actions)
+        if self.agg_func:
+            agg_value = self.agg_func(predicted_states)
+            return agg_value
+        else:
+            return predicted_states
 
+    def get_state(self) -> dict[str, State]:
+        state = {}
+        for entity in self.sub_entities.values():
+            state[entity.name] = entity.get_state()
 
-    def update_system_state(self):
+        if self.agg_func:
+            state = self.agg_func(state)
 
-        # get (and update) current state
-        self._state = self.get_current_state()
-        return self._state
+        return state
 
-        # get current consumption (the load demand that needs to be currently satisfied)
-        #cur_comsumption =  self._state['curr_consumption']
-
-        # get current production
-        #cur_production = self._state['production']
-
-        # get current price
-        #[cur_price_sell, cur_price_buy] = self.get_current_market_price()
-
-        # get storage/trade policy for all entities
-        #joint_action = self.get_joint_action(cur_comsumption, cur_production, cur_price_sell, cur_price_buy)
-
-        #return joint_action
-
-
-    # TODO: this method has to call the agents that decides about the policy
-    def get_joint_action(self)->dict[str, EnergyAction]:
-        joint_action = {}
-        for entitiy_name in self.sub_entities.keys():
-            if entitiy_name in self.storage_keys:
-                joint_action[entitiy_name] = StorageAction(charge=10)
-        return joint_action
-
-
-    def get_current_market_price(self):
-        # todo: remove
-        return [8,8]
-
-    def predict(self, actions: Union[np.ndarray, dict[str, Any]]):
-        pass
-
-    def predict_next_consumption(self) -> float:
-        return sum([self.sub_entities[name].predict_next_consumption() for name in self.consumption_keys])
-  
-
-    def get_current_state(self) -> State:
-        sum_dict = {}
-        for entity_name in self.sub_entities:
-            cur_state = self.sub_entities[entity_name].get_current_state()
-            for k, v in cur_state.items():
-                if v is None:
-                    v = 0
-                sum_dict[k] = sum_dict.get(k, 0) + v
-        return State(storage=sum_dict['state_of_charge'], curr_consumption=sum_dict['consumption'], pred_consumption=sum_dict['next_consumption'])
-
-
-    def update_state(self, state: State):
-        for entity in self.sub_entities:
-            entity.update_state(state[entity.name])
-
-    def get_observation_space(self) -> Bounds:
-        low = np.array([NO_CHARGE, NO_CONSUMPTION, NO_CONSUMPTION])
-        high = np.array([MAX_CAPACITY, MAX_CONSUMPTION, MAX_CONSUMPTION])
-        return Bounds(low=low, high=high, shape=(len(low),) ,dtype=np.float32)
-
-
-    def get_action_space(self) -> Bounds:
-        storage_devices_action_sapces = [v.get_action_space() for v in self.get_storage_devices().values()]
-        
-        # Combine the Bounds objects into a single Bound object
-        combined_low = np.array([bound['low'] for bound in storage_devices_action_sapces])
-        combined_high = np.array([bound['high'] for bound in storage_devices_action_sapces])
-        return Bounds(low=combined_low, high=combined_high, shape=(len(combined_low),),  dtype=np.float32)
-
-
-    def reset(self) -> State:
-        # return self.apply_func_to_sub_entities(lambda entity: entity.reset())
-        self._state = self._init_state
-        self._state['pred_consumption'] = self.predict_next_consumption()
+    def reset(self) -> None:
         for entity in self.sub_entities.values():
             entity.reset()
-        return self._state
 
-
-    def get_storage_devices(self):
-        return self.apply_func_to_sub_entities(lambda entity: entity, condition=lambda x: isinstance(x, Battery))
-    
-    def validate_action(self, actions: dict[str, EnergyAction]):
-        for entity_name, action in actions.items():
-            if len(action) > 1 or 'charge' not in action.keys():
-                raise ValueError(f"Invalid action key {action.keys()} for entity {entity_name}")
-            else:
-                return True
-    # @property
-    # def current_storge_state(self):
-    #     return sum([s.current_state['state_of_charge'] for s in self.storage_units])
-
-    def apply_func_to_sub_entities(self, func, condition=lambda x: True):
-        results = {}
+    def get_observation_space(self) -> dict[str, Bounds]:
+        obs_space = {}
         for name, entity in self.sub_entities.items():
-            if condition(entity):
-                results[name] = func(entity)
-        return results
+            obs_space[name] = entity.get_observation_space()
 
-    def get_next_consumption(self) -> float:
-        return sum([self.sub_entities[name].predict_next_consumption() for name in self.consumption_keys])
+        return obs_space
+
+    def get_action_space(self) -> dict[str, Bounds]:
+        action_space = {}
+        for name, entity in self.sub_entities.items():
+            action_space[name] = entity.get_action_space()
+
+        return action_space
 
 
 

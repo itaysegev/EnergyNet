@@ -28,7 +28,7 @@ class NetworkEntity:
         self.name = name
 
     @abstractmethod
-    def step(self, actions: Union[np.ndarray, EnergyAction]) -> None:
+    def step(self, actions: Union[np.ndarray, EnergyAction], **kwargs) -> None:
         """
         Perform the given action and return the new state and reward.
 
@@ -88,8 +88,8 @@ class ElementaryNetworkEntity(NetworkEntity):
         self.init_state = init_state
         self.energy_dynamics = energy_dynamics
 
-    def step(self, action: EnergyAction, params=None) -> None:
-        new_state = self.energy_dynamics.do(action=action, state=self.state, params=params)
+    def step(self, action: EnergyAction, **kwargs) -> None:
+        new_state = self.energy_dynamics.do(action=action, state=self.state, **kwargs)
         self.state = new_state
 
             
@@ -135,12 +135,12 @@ class CompositeNetworkEntity(NetworkEntity):
         self.sub_entities = sub_entities
         self.agg_func = agg_func
 
-    def step(self, actions: dict[str, Union[np.ndarray, EnergyAction]]) -> None:
+    def step(self, actions: dict[str, Union[np.ndarray, EnergyAction]], **kwargs) -> None:
         for entity_name, action in actions.items():
             if type(action) is np.ndarray:
                 action = self.sub_entities[entity_name].action_type.from_numpy(action)
             
-            self.sub_entities[entity_name].step(action)
+            self.sub_entities[entity_name].step(action, **kwargs)
     # TODO: implement predict
     def predict(self, actions: Union[np.ndarray, dict[str, EnergyAction]]):
 

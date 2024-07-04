@@ -3,27 +3,28 @@ from typing import Union
 import numpy as np
 from energy_net.model.action import EnergyAction
 from energy_net.network_manager import NetworkManager
+
 from energy_net.defs import Bounds
 
 
 
 class Network():
-    def __init__(self, name: str, network_entities: list[NetworkEntity], market_network: Union[NetworkEntity, None] = None,
+    def __init__(self, name: str, strategic_entities: dict[str, NetworkEntity], market_network: Union[list[NetworkEntity], None] = None,
                 physical_network: Union[NetworkEntity, None] = None, network_manager: Union[NetworkManager, None] = None ) -> None:
-        self.network_entities = network_entities
+        self.strategic_entities = strategic_entities
         self.market_network = market_network
         self.physical_network = physical_network
         self.network_manager = network_manager
         self.name = name
 
-    def step(self, action: Union[np.ndarray, EnergyAction]):
+    def step(self, joint_actions: dict[str, EnergyAction]):
         """
         Advances the simulation by one time step.
         This method should update the state of each network entity.
         """
-        for entity in self.network_entities:
-            entity.step()
-
+        for agent_name, action  in joint_actions.items():
+            self.strategic_entities[agent_name].step(action)
+            
     def reset(self):
         """
         Resets the state of the network and all its entities to their initial state.
@@ -31,12 +32,6 @@ class Network():
         """
         for entity in self.network_entities:
             entity.reset()
-
-    def add_entity(self, entity: NetworkEntity):
-        """
-        Adds a new entity to the network.
-        """
-        self.network_entities.append(entity)
 
 
     def get_state(self) -> np.ndarray:

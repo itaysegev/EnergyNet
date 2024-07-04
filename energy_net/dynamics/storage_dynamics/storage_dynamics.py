@@ -12,7 +12,7 @@ class BatteryDynamics(StorageDynamics):
     def __init__(self) -> None:
         super().__init__()
 
-    def do(self, action: EnergyAction, state: StorageState=None, params=None) -> StorageState:
+    def do(self, action: EnergyAction, state: StorageState=None, **kwargs) -> StorageState:
 
         """Perform action on battery.
             parameters
@@ -27,9 +27,13 @@ class BatteryDynamics(StorageDynamics):
             return : BatteryState
                 New state of charge in [kWh].
         """
+        # Check device parameters
+        assert state['energy_capacity'] >= 0, "energy capacity must be greater than zero."
+        assert state['charging_efficiency'] >= 0 and state['charging_efficiency'] <= 1, "charging efficiency must be between 0 and 1."
+        assert state['discharging_efficiency'] >= 0 and state['discharging_efficiency'] <= 1, "discharging_efficiency efficiency must be between 0 and 1."
 
         value = action["charge"] if isinstance(action, dict) else action
-        lifetime_constant = DEFAULT_LIFETIME_CONSTANT
+        
         # Charging and discharging losses
         if value > 0: # Charge
             value = value * state['charging_efficiency']
@@ -37,8 +41,8 @@ class BatteryDynamics(StorageDynamics):
             value = value * state['discharging_efficiency']
 
         # Natural decay losses
-        if params is not None and 'lifetime_constant' in params:
-            lifetime_constant = params.get('lifetime_constant')
+        lifetime_constant = kwargs.get('lifetime_constant', DEFAULT_LIFETIME_CONSTANT)
+        
         if value is not None:
             new_state = state.copy()
             if value > MIN_CHARGE:  # Charge
