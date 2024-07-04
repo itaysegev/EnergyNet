@@ -13,10 +13,12 @@ class BatteryDynamics(StorageDynamics):
         super().__init__()
 
     def do(self, action: EnergyAction, state: StorageState=None, params=None) -> StorageState:
-        
+
         """Perform action on battery.
             parameters
             ----------
+            params : Dict
+                Holds additional parameters for battery such as lifetime.
             action : Numpy array
                 Action to be performed. Must be a numpy array with a single value.
             state : BatteryState
@@ -35,8 +37,8 @@ class BatteryDynamics(StorageDynamics):
             value = value * state['discharging_efficiency']
 
         # Natural decay losses
-        if params:  # Not sure we need to check and 'lifetime_constant' in params, since I directly transfer the lifetime constant which is just a float
-            lifetime_constant = params  # Not sure we need params.get('lifetime_constant')
+        if params is not None and 'lifetime_constant' in params:
+            lifetime_constant = params.get('lifetime_constant')
         if value is not None:
             new_state = state.copy()
             if value > MIN_CHARGE:  # Charge
@@ -49,9 +51,7 @@ class BatteryDynamics(StorageDynamics):
             exp_mult = partial(self.exp_mult, state=state, lifetime_constant=lifetime_constant)
             new_state['energy_capacity'] = exp_mult(state['energy_capacity'])
             new_state['power_capacity'] = exp_mult(state['power_capacity'])
-            #new_state['charging_efficiency'] = exp_mult(state['charging_efficiency'])
             new_state['charging_efficiency'] = state['charging_efficiency']
-            #new_state['discharging_efficiency'] = exp_mult(state['discharging_efficiency'])
             new_state['discharging_efficiency'] = state['discharging_efficiency']
             new_state['current_time'] = move_time_tick(new_state['current_time'])
             return new_state	
