@@ -1,13 +1,13 @@
 from abc import abstractmethod
+from typing import Any, List
 
 from .params import DynamicsParams
 from ..config import DEFAULT_PRODUCTION
 from ..model.state import State
 from ..model.action import EnergyAction
-
+from ..data.data import TimeSeriesData
 
 class EnergyDynamics():
-
     def __init__(self, dynamics_params:DynamicsParams = None):
         """
         Constructor for the NetworkEntity class.
@@ -22,6 +22,28 @@ class EnergyDynamics():
 
     @abstractmethod
     def predict(self, action: EnergyAction, state:State = None, params = None):
+        pass
+    
+    
+    
+class DataDrivenDynamics(EnergyDynamics):
+    def __init__(self, dynamics_params: DynamicsParams = None, start_time_step: int = None, end_time_step: int = None):
+        super().__init__(dynamics_params)
+        
+        # Assert the data file path is provided in dynamics_params
+        if not dynamics_params or not dynamics_params.data_file:
+            raise ValueError("Data file path must be specified in dynamics_params")
+        
+        # Initialize TimeSeriesData with the given parameters
+        self.time_series_data = TimeSeriesData(dynamics_params.data_file, start_time_step, end_time_step)
+    
+    @abstractmethod
+    def do(self, action: EnergyAction, state: State = None, params: Any = None):
+        # Implement the logic for the 'do' method
+        pass
+    @abstractmethod
+    def predict(self, action: EnergyAction, state: State = None, params: Any = None):
+        # Implement the logic for the 'predict' method
         pass
 
 
