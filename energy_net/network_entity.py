@@ -4,11 +4,11 @@ from collections import OrderedDict
 from typing import Union
 import numpy as np
 
-from ..dynamics.energy_dynamcis import EnergyDynamics
-from ..utils.utils import AggFunc
-from ..model.action import EnergyAction
-from ..model.state import State
-from ..model.reward import Reward
+from energy_net.dynamics.energy_dynamcis import EnergyDynamics
+from energy_net.utils.utils import AggFunc
+from energy_net.model.action import EnergyAction
+from energy_net.model.state import State
+from energy_net.model.reward import Reward
 from energy_net.defs import Bounds
 
 
@@ -92,13 +92,10 @@ class ElementaryNetworkEntity(NetworkEntity):
         new_state = self.energy_dynamics.do(action=action, state=self.state, **kwargs)
         self.state = new_state
 
-            
 
-    # TODO: implement predict
     def predict(self, action: EnergyAction, state: State):
         predicted_state = self.energy_dynamics.predict(action=action, state=state)
         return predicted_state
-
 
     def get_state(self) -> State:
         """
@@ -108,12 +105,11 @@ class ElementaryNetworkEntity(NetworkEntity):
         State: The current state.
         """
         return self.state
-    
-  
-         
-    @abstractmethod
+
+
     def reset(self) -> None:
-        pass
+        self.state = self.init_state
+        self.energy_dynamics.reset()
 
     @abstractmethod
     def get_observation_space(self) -> Bounds:

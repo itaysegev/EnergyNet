@@ -1,8 +1,8 @@
-from .entities.network_entity import NetworkEntity
+from energy_net.network_entity import NetworkEntity
 from typing import Union
 import numpy as np
 from energy_net.model.action import EnergyAction
-from energy_net.network_manager import NetworkManager
+from energy_net.market.nda_markets_manager import NDAMarketsManager
 
 from energy_net.defs import Bounds
 
@@ -10,7 +10,7 @@ from energy_net.defs import Bounds
 
 class Network():
     def __init__(self, name: str, strategic_entities: dict[str, NetworkEntity], market_network: Union[list[NetworkEntity], None] = None,
-                physical_network: Union[NetworkEntity, None] = None, network_manager: Union[NetworkManager, None] = None ) -> None:
+                 physical_network: Union[NetworkEntity, None] = None, network_manager: Union[NDAMarketsManager, None] = None) -> None:
         self.strategic_entities = strategic_entities
         self.market_network = market_network
         self.physical_network = physical_network

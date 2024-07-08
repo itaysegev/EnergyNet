@@ -1,11 +1,10 @@
 from energy_net.market.market_entity import MarketEntity
-from energy_net.market.market_manager import MarketManager
+from energy_net.market.nda_markets_manager import NDAMarketsManager
 from .model.state import State
 from .defs import Bid
 from .utils.utils import condition, get_predicted_state
 
-
-class NDAMarketManager(MarketManager):
+class NDAMarket():
     def __init__(self, market_entities:list[MarketEntity]):
         self.market_entities = market_entities
 

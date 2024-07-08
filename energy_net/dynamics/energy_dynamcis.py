@@ -24,6 +24,10 @@ class EnergyDynamics():
     def predict(self, action: EnergyAction, state:State = None, params = None):
         pass
 
+    @abstractmethod
+    def reset(self):
+        pass
+
 
 class ProductionDynamics(EnergyDynamics):
 

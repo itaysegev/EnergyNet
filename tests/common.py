@@ -4,17 +4,17 @@ from pathlib import Path
 from typing import List
 
 from energy_net.devices.params import StorageParams, ProductionParams, ConsumptionParams
-from energy_net.entities.pcsunit import PCSUnit
-from energy_net.dynamics.consumption_dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
+from energy_net.entities.pcs_unit import PCSUnit
+from energy_net.dynamics.consumption_dynamics.consumption_dynamics import ConsumptionDynamics
 from energy_net.network_entity import NetworkEntity
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
-from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
+from energy_net.dynamics.production_dynamics.pv_dynamics import PVDynamics
 
 def example_pcsunit():
     # initialize consumer devices
         consumption_params_arr=[]
-        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=PCSUnitConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=ConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
 
