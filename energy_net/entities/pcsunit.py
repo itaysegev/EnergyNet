@@ -39,12 +39,14 @@ class PCSUnit(CompositeNetworkEntity):
             # we convert the entity dict to a list and match action to entities by index
             sub_entities = list(self.sub_entities.values())
             for entity_index, action in enumerate(actions):
-                predicted_states[sub_entities[entity_index].name] = sub_entities[entity_index].predict(
+                if hasattr(type(sub_entities[entity_index]), 'predict'):
+                    predicted_states[sub_entities[entity_index].name] = sub_entities[entity_index].predict(
                     np.array([action]))
 
         else:
             for entity_name, action in actions.items():
-                predicted_states[entity_name] = self.sub_entities[entity_name].predict(action)
+                if hasattr(type(self.sub_entities[entity_name]), 'predict'):
+                    predicted_states[entity_name] = self.sub_entities[entity_name].predict(action)
 
         if self.agg_func:
             agg_value = self.agg_func(predicted_states)
