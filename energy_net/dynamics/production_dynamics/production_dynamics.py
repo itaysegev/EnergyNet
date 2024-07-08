@@ -2,6 +2,7 @@ from ...config import DEFAULT_PRODUCTION
 from ..energy_dynamcis import  ProductionDynamics
 from ...model.action import EnergyAction
 from ...model.state import ProducerState
+from ...data.data import TimeSeriesData
 from numpy.typing import ArrayLike
 import pandas as pd
 
@@ -23,22 +24,15 @@ class PVDynamics(ProductionDynamics):
         else:
             return self.get_current_production(state,params)
 
-    # TODO: Not sure if I can pass time_step as a parameter or maybe its inside the state?
-    '''
-     def do_data_driven(self, action: EnergyAction, state: ProducerState = None, time_step, params=None) -> ProducerState:
+    def do_data_driven(self, time_step, action: EnergyAction = None, state: ProducerState = None, params = None) -> ProducerState:
 
         """Get solar generation output.
         """
-        df = pd.read_csv('solar_production_real_data.csv')
+        data = TimeSeriesData('CAISO_net-load_2021.xlsx')
+        solar_data = data.get_column('Solar')
 
-        production_data = df.Solar.to_numpy()
+        return solar_data[time_step]
 
-        production_data = [int(x.replace(',', '')) if ',' in x else x for x in production_data]
-
-        state['production'] = production_data[time_step]
-
-        return state
-    '''
 
 
     def get_current_production(self, state, params):

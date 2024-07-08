@@ -3,12 +3,13 @@ from numpy.typing import ArrayLike
 from ..energy_dynamcis import ConsumptionDynamics
 from ...model.action import EnergyAction
 from ...model.state import ConsumerState, State
+from ...data.data import TimeSeriesData
 
 
-class ElectricHeaterDynamics(ConsumptionDynamics):
+class GeneralLoad(ConsumptionDynamics):
     def __init__(self) -> None:
         super().__init__()
-        
+
     def do(self, action: EnergyAction, state:ConsumerState) -> ConsumerState:
         """Get electric heater consumption.
         
@@ -29,7 +30,15 @@ class ElectricHeaterDynamics(ConsumptionDynamics):
         else:
             raise ValueError('Invalid action')
 
-    
+    def do_data_driven(self, time_step, action: EnergyAction = None, state: ConsumerState = None, params = None) -> ConsumerState:
+
+        """Get solar generation output.
+        """
+        data = TimeSeriesData('CAISO_net-load_2021.xlsx')
+        load_data = data.get_column('Load')
+
+        return load_data[time_step]
+
     def predict(self, action, params, state):
         pass
 
