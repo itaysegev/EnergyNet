@@ -1,16 +1,14 @@
-from typing import Any, Union, Mapping
+from typing import Union
 import numpy as np
 
-from ..config import INITIAL_TIME, NO_CONSUMPTION, MAX_CONSUMPTION, NO_CHARGE, MAX_CAPACITY, PRED_CONST_DUMMY, MIN_POWER
 from ..defs import Bounds
-from ..model.action import EnergyAction, StorageAction, TradeAction, ConsumeAction, ProduceAction
+from ..model.action import EnergyAction
 
 from ..model.state import State
-from .network_entity import  CompositeNetworkEntity
+from energy_net.network_entity import  CompositeNetworkEntity
 from ..devices.storage_devices.local_storage import Battery
 from ..devices.consumption_devices.local_consumer import ConsumerDevice
 
-from ..devices.params import StorageParams, ProductionParams, ConsumptionParams
 from ..devices.production_devices.local_producer import PrivateProducer
 
 from ..utils.utils import AggFunc
