@@ -13,7 +13,7 @@ from ..env.base import Environment, EpisodeTracker
 from ..model.action import EnergyAction
 from ..model.reward import RewardFunction
 from ..network import Network
-from ..network_agent import NetworkAgent
+
 from ..utils.env_utils import bounds_to_gym_box
 
 
@@ -27,6 +27,7 @@ class EnergyNetEnv(Environment, ParallelEnv):
 
     def __init__(self,
         network_lst: List[Network],
+        network : Network,
         simulation_start_time_step: int = None, # Time step to start simulation
         simulation_end_time_step: int = None, 
         episode_time_steps: int = None, # Number of time steps in an episode
@@ -37,28 +38,47 @@ class EnergyNetEnv(Environment, ParallelEnv):
         self.episode_tracker = EpisodeTracker(simulation_start_time_step, simulation_end_time_step)
         super().__init__(seconds_per_time_step=seconds_per_time_step, random_seed=initial_seed, episode_tracker=self.episode_tracker)
 
-        self.network_lst = network_lst 
-        self.num_entities = len(self.network_lst)
-
         self.episode_time_steps = episode_time_steps
 
-
-        self.__state = None
 
         # set random seed if specified
         self.__np_random = None
         self.seed(initial_seed)
+        
+        
+        # initialize env configurations with argument or default value
+        self.network = network
+        #self._single_value_config 
+
 
         # pettingzoo required attributes
-        self.entities = {entity.name: entity for entity in self.network_lst}
-        
         self.agents = []
-        self.agents_name_to_network = {}
-
+        self.possible_agents = [self.network.strategic_entities.keys()]
+        
+        
+        # default rewards table set
+        
+        
+        # set all custom reward tables for each agent
+        
+        
+        # set final reward table for each agent as the default reward table updated by the custom rewards.
+        
+        
+        
+        
+        
+        
+        
+        # initialize observation and action spaces
+        
         self.__observation_space = self.get_observation_space()
         self.__action_space = self.get_action_space()
+        
 
-
+    
+        # state and env objects
+        self.__state = None
 
     def reset(self, seed=None, return_info=True, options=None):
         
@@ -79,9 +99,15 @@ class EnergyNetEnv(Environment, ParallelEnv):
 
         assert len(self.agents) > 0, "No agents have been set. Please set agents before calling reset."
 
-        for entity in self.entities.values():
-            entity.reset()
+        
+        # reset agents
+        self.agents = self.possible_agents.copy()
+        
+        # reset network
+        self.network.reset()
 
+        
+        self.__state = self.network.get_state()
 
         self.__action_space = self.get_action_space()
 
@@ -96,56 +122,59 @@ class EnergyNetEnv(Environment, ParallelEnv):
 
     def seed(self, seed=None):
         self.__np_random, seed = seeding.np_random(seed)
-
-
-    def step(self, joint_action: dict[str, Union[np.ndarray, EnergyAction]]):
-
-        # init array of rewards and termination flag per agent
-        rewards = {a: 0 for a in self.agents}
-        terminations = {a: False for a in self.agents}
-
-        # Perform the actions
-        for agent_name, actions in joint_action.items():
-            #s
-            curr_state = self.agents_name_to_network[agent_name].get_state()
-            # NEW TIME TICK
-
-            self.self.agents_name_to_network.step(actions)
-            #s'
-            next_state = self.agents_name_to_network[agent_name].get_state()    
-            
-            #TODO: r
-            # rewards[agent_name] = self.reward_function.calculate(curr_state, actions, next_state, time_steps=self.time_step)
-
-        # get new observations according to the current state
-        obs = self.__observe_all()
-
-        self.__action_space = self.get_action_space()
-
-        infos = self.get_info()
-
-        #TODO: 
-        # Check if the simulation has reached the end
-        truncs = {a: False for a in self.agents}
-        if self.terminated():
-            truncs = {a: True for a in self.agents}
-            terminations = {a: True for a in self.agents}
-            self.agents = []
-
-        self.next_time_step()
-
-        return obs, rewards, terminations, truncs, infos
-
- 
+        
+        
+    def state(self):
+        return self.__state.copy()
+    
+    
     @lru_cache(maxsize=None)
     def observation_space(self, agent: str) -> Box:
         return self.__observation_space[agent]
 
-   
+
     def action_space(self, agent: str) -> Box:
         return self.__action_space[agent]
-    
-    
+
+    def step(self, joint_action: dict[str, Union[np.ndarray, EnergyAction]]):
+        
+        
+        # step in environment with sampled action
+        new_state, rewards, terms, truncs, infos = self.network.step(joint_action)
+        
+        
+        # log desired actions and performed transitions
+        for agent, agent_info in infos.items():
+            agent_info['desired_action'] = joint_action[agent]
+            # agent_info['performed_transition'] = true_actions[agent]
+        
+        # set new state in environment
+        self.__state = new_state
+
+        # get new observations according to the current state
+        obs = self.__observe_all()
+        
+        # remove done agents from live agents list
+        for agent_name, done in terms.items():
+            if done:
+                self.agents.remove(agent_name)
+
+        self.__action_space = self.get_action_space()
+
+        # infos = self.get_info()
+
+        # #TODO: 
+        # # Check if the simulation has reached the end
+        # truncs = {a: False for a in self.agents}
+        # if self.terminated():
+        #     truncs = {a: True for a in self.agents}
+        #     terminations = {a: True for a in self.agents}
+        #     self.agents = []
+
+        self.next_time_step()
+
+        return obs, rewards, terms, truncs, infos
+
 
     ######################
     # End Pettingzoo API #
@@ -156,17 +185,30 @@ class EnergyNetEnv(Environment, ParallelEnv):
     # Extra API Functions #
     #######################
 
-    def set_agents(self, agent: NetworkAgent, network_idx: int) -> None:
-        network = self.network_lst[network_idx]
-        agent.set_network(network)
-        self.agents_name_to_network[agent.name] = network
-        self.agents.append(agent)
+    # def set_agents(self, agent: NetworkAgent, network_idx: int) -> None:
+    #     network = self.network_lst[network_idx]
+    #     agent.set_network(network)
+    #     self.agents_name_to_network[agent.name] = network
+    #     self.agents.append(agent)
+    
+    
+    
     
     def agent_iter(self):
         """
         Returns an iterator over all agents.
         """
         return iter(self.agents)
+    
+    
+    def set_state(self, state):
+        """
+        Sets the current environment state
+
+        Args:
+            state: the state to set in the environment
+        """
+        self.__state = state
 
 
     def observe_all(self):
@@ -178,6 +220,8 @@ class EnergyNetEnv(Environment, ParallelEnv):
             a dictionary for all agents observations.
         """
         return self.__observe_all()
+    
+    
     
     def __observe_all(self):
         return {agent: np.array(list(self.entities[agent].get_state().values()),dtype=np.float32) for agent in self.agents}
@@ -191,11 +235,11 @@ class EnergyNetEnv(Environment, ParallelEnv):
     #         raise TypeError("observation space not supported")
 
     def get_observation_space(self) -> dict[str, Box]:
-        return {name: bounds_to_gym_box(entity.get_observation_space()) for name, entity in self.entities.items()}
+        return {name: bounds_to_gym_box(bound) for name, bound in self.network.get_observation_space().items()}
     
 
     def get_action_space(self) -> dict[str, Box]:
-        return {name: bounds_to_gym_box(entity.get_action_space()) for name, entity in self.entities.items()}
+        return {name: bounds_to_gym_box(bound) for name, bound in self.network.get_action_space().items()}
 
 
     def terminated(self) -> bool:
@@ -221,8 +265,11 @@ class EnergyNetEnv(Environment, ParallelEnv):
     
     def get_info(self) -> dict:
         return {agent: {} for agent in self.agents}
-        
+    
+    
+    
 
+    
 
 
 

@@ -30,7 +30,7 @@ class Network():
         Resets the state of the network and all its entities to their initial state.
         This is typically used at the beginning of a new episode.
         """
-        for entity in self.network_entities:
+        for entity in self.strategic_entities.values():
             entity.reset()
 
 
@@ -44,46 +44,19 @@ class Network():
 
         return np.array(state)   
 
-    def get_observation_space(self) -> Bounds:
+    def get_observation_space(self) -> dict[str, Bounds]:
         """
         Returns the observation space of the network.
         """
-        obs_space = []
-        for entity in self.network_entities:
-            obs_space.append(entity.get_observation_space())
-        
-        return obs_space
+        return {agent_name: entity.get_observation_space() for agent_name, entity in self.strategic_entities.items()}
         
         
     
-    def get_action_space(self) -> Bounds:
+    def get_action_space(self) -> dict[str, Bounds]:
         """
         Returns the action space of the network.
-        """
-        action_space = []
-        for entity in self.network_entities:
-            action_space.append(entity.get_state())
+        """ 
+        return {agent_name: entity.get_action_space() for agent_name, entity in self.strategic_entities.items()}
         
-        return action_space
     
-    # def get_observation_names(self):
-    #     """
-    #     Returns the names of the observations in the observation space.
-    #     """
-    #     state = []
-    #     for entity in self.network_entities:
-    #         state.append(entity.get_state())
-
-
-    
-    # def get_action_names(self):
-    #     """
-    #     Returns the names of the actions in the action space.
-    #     """
-    #     return None
-    
-    # def get_episode_time_steps(self):
-    #     """
-    #     Returns the number of time steps in an episode.
-    #     """
-    #     return None
+  
