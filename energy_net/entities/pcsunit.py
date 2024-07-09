@@ -22,8 +22,6 @@ class PCSUnit(CompositeNetworkEntity):
 
     def __init__(self, name: str, sub_entities: dict[str, Battery, ConsumerDevice, PrivateProducer] = None, agg_func: AggFunc = None):
         super().__init__(name)
-        self.sub_entities = sub_entities
-        self.agg_func = agg_func
 
     def step(self, actions: dict[str, Union[np.ndarray, EnergyAction]], **kwargs) -> None:
         for entity_name, action in actions.items():
