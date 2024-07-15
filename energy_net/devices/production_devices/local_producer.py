@@ -4,7 +4,7 @@ import numpy as np
 from ..device import Device
 from ..params import ProductionParams
 from ...defs import Bounds
-from ...model.state import ProducerState
+from ...model.state import ProductionState
 from ...model.action import ProduceAction
 from ...config import MIN_POWER, MIN_PRODUCTION, MAX_ELECTRIC_POWER, DEFAULT_SELF_CONSUMPTION
 
@@ -30,12 +30,12 @@ class PrivateProducer(Device):
         self.production = MIN_PRODUCTION
         self.self_consumption = production_params["self_consumption"] if "self_consumption" in production_params  else DEFAULT_SELF_CONSUMPTION  # self consumption
         self.action_type = ProduceAction
-        init_state = ProducerState(max_produce=self.max_production, production=self.production)
+        init_state = ProductionState(max_produce=self.max_production, production=self.production)
         super().__init__(production_params, init_state=init_state)
 
     @property
-    def current_state(self) -> ProducerState:
-        return ProducerState(max_produce=self.max_production, production=self.production)
+    def current_state(self) -> ProductionState:
+        return ProductionState(max_produce=self.max_production, production=self.production)
 
     @property
     def max_production(self):
@@ -58,7 +58,7 @@ class PrivateProducer(Device):
         self._production = production
 
 
-    def get_current_state(self) -> ProducerState:
+    def get_current_state(self) -> ProductionState:
         return self.current_state
     
     

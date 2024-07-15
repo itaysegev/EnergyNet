@@ -2,7 +2,7 @@
 import numpy as np
 from ...defs import Bounds
 from ..device import Device
-from ...model.state import ConsumerState
+from ...model.state import ConsumptionState
 from ...model.action import ConsumeAction
 from ...config import MAX_ELECTRIC_POWER, MIN_POWER, MIN_EFFICIENCY, MAX_EFFICIENCY, NO_CONSUMPTION
 from ..params import ConsumptionParams
@@ -27,7 +27,7 @@ class ConsumerDevice(Device):
         self.init_max_electric_power = self.max_electric_power
         self.consumption = NO_CONSUMPTION
         self.action_type = ConsumeAction
-        init_state = ConsumerState(max_electric_power=self.max_electric_power, efficiency=self.efficiency, consumption=self.consumption)
+        init_state = ConsumptionState(max_electric_power=self.max_electric_power, efficiency=self.efficiency, consumption=self.consumption)
         super().__init__(consumptionParams, init_state=init_state)
 
 
@@ -41,8 +41,8 @@ class ConsumerDevice(Device):
         self._max_electric_power = max_electric_power
 
     @property
-    def current_state(self) -> ConsumerState:
-        return ConsumerState(max_electric_power=self.max_electric_power, efficiency=self.efficiency, consumption=self.consumption)
+    def current_state(self) -> ConsumptionState:
+        return ConsumptionState(max_electric_power=self.max_electric_power, efficiency=self.efficiency, consumption=self.consumption)
     
     @property
     def efficiency(self) -> float:
@@ -54,14 +54,14 @@ class ConsumerDevice(Device):
         self._efficiency = efficiency
     
 
-    def update_state(self, state: ConsumerState):
+    def update_state(self, state: ConsumptionState):
         self.max_electric_power = state.max_electric_power
         self.efficiency = state.efficiency
         self.consumption = state.consumption
         super().update_state(state)
 
   
-    def reset(self) -> ConsumerState:
+    def reset(self) -> ConsumptionState:
         super().reset()
         self.max_electric_power = self.init_max_electric_power
         self.consumption = NO_CONSUMPTION

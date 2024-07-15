@@ -1,6 +1,7 @@
 from energy_net.network_entity import ElementaryNetworkEntity
 from energy_net.dynamics.energy_dynamcis import ConsumptionDynamics
-from ..model.state import State
+from energy_net.defs import Bounds
+from energy_net.model.state import State
 
 
 class ConsumersAgg(ElementaryNetworkEntity):
@@ -9,7 +10,6 @@ class ConsumersAgg(ElementaryNetworkEntity):
         super().__init__(name, energy_dynamics=consumption_dynamics, init_state=init_state)
 
     def get_observation_space(self) -> dict[str, Bounds]:
-        return obs_space
-
+        pass
     def get_action_space(self) -> dict[str, Bounds]:
-        return action_space
+        pass

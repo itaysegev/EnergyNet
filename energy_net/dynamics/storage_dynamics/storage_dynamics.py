@@ -22,10 +22,10 @@ class BatteryDynamics(StorageDynamics):
             action : Numpy array
                 Action to be performed. Must be a numpy array with a single value.
             state : BatteryState
-                Current state of the battery.
+                Current cur_state of the battery.
             lifetime_constant : float
             return : BatteryState
-                New state of charge in [kWh].
+                New cur_state of charge in [kWh].
         """
         # Check device parameters
         assert state['energy_capacity'] >= 0, "energy capacity must be greater than zero."

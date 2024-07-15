@@ -2,7 +2,6 @@ from energy_net.defs import Bid, State
 from energy_net.market_entity import MarketProducer, MarketConsumer
 from energy_net.network_entity import ElementaryNetworkEntity
 from energy_net.dynamics.energy_dynamcis import ProductionDynamics, ConsumptionDynamics
-from energy_net.market.nda_markets_manager import NDAMarketsManager
 from energy_net.utils import agg_func_sum
 
 
@@ -42,7 +41,7 @@ class DummyMarketProducer(MarketProducer):
             return None
 
     def predict(self, action, params, state):
-        return self.network_entity.predict(action, params, state)
+        return self.network_entity.predict(params, action)
 
 
 class DummyConsumptionDynamics(ConsumptionDynamics):

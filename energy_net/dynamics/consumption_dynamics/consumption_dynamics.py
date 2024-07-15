@@ -2,14 +2,14 @@ from numpy.typing import ArrayLike
 
 from ..energy_dynamcis import ConsumptionDynamics
 from ...model.action import EnergyAction
-from ...model.state import ConsumerState, State
+from ...model.state import ConsumptionState, State
 
 
 class ElectricHeaterDynamics(ConsumptionDynamics):
     def __init__(self) -> None:
         super().__init__()
         
-    def do(self, action: EnergyAction, state:ConsumerState) -> ConsumerState:
+    def do(self, action: EnergyAction, state:ConsumptionState) -> ConsumptionState:
         """Get electric heater consumption.
         
         Parameters
@@ -17,7 +17,7 @@ class ElectricHeaterDynamics(ConsumptionDynamics):
         action : ArrayLike
             Action to be performed. Must be a numpy array.
         state : HeaterState
-            Current state of the electric heater.
+            Current cur_state of the electric heater.
         return : float
             Electric heater consumption in [kW].
         """

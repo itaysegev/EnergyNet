@@ -15,7 +15,7 @@ from energy_net.defs import Bounds
 class NetworkEntity:
     """
     This is a base class for all network entities. It provides an interface for stepping through actions,
-    predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
+    predicting the outcome of actions, getting the current cur_state, updating the cur_state, and getting the reward.
     """
 
     def __init__(self, name: str):
@@ -30,7 +30,7 @@ class NetworkEntity:
     @abstractmethod
     def step(self, actions: Union[np.ndarray, EnergyAction], **kwargs) -> None:
         """
-        Perform the given action and return the new state and reward.
+        Perform the given action and return the new cur_state and reward.
 
         Parameters:
         action (EnergyAction): The action to perform.
@@ -41,16 +41,16 @@ class NetworkEntity:
     
     # TODO: Define the predict method
     @abstractmethod
-    def predict(self, action: EnergyAction, state: State):
+    def predict(self, state: State, action: EnergyAction):
         """
-        Predict the outcome of performing the given action on the given state.
+        Predict the outcome of performing the given action on the given cur_state.
 
         Parameters:
         action (EnergyAction): The action to perform.
-        state (State): The current state.
+        cur_state (State): The current cur_state.
 
         Returns:
-        list: The predicted new state and reward after performing the action.
+        list: The predicted new cur_state and reward after performing the action.
         """
         pass
 
@@ -78,37 +78,37 @@ class NetworkEntity:
 class ElementaryNetworkEntity(NetworkEntity):
     """
     This class is an elementary network entity that is composed of other network entities. It provides an interface for stepping through actions,
-    predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
+    predicting the outcome of actions, getting the current cur_state, updating the cur_state, and getting the reward.
     """
 
     def __init__(self, name, energy_dynamics: EnergyDynamics , init_state:State):
         super().__init__(name)
-        # if the state is none - this is a stateless entity
-        self.state = init_state
+        # if the cur_state is none - this is a stateless entity
+        self.cur_state = init_state
         self.init_state = init_state
         self.energy_dynamics = energy_dynamics
 
     def step(self, action: EnergyAction, **kwargs) -> None:
-        new_state = self.energy_dynamics.do(action=action, state=self.state, **kwargs)
-        self.state = new_state
+        new_state = self.energy_dynamics.do(action=action, state=self.cur_state, **kwargs)
+        self.cur_state = new_state
 
 
-    def predict(self, action: EnergyAction, state: State):
+    def predict(self, state: State, action: EnergyAction):
         predicted_state = self.energy_dynamics.predict(action=action, state=state)
         return predicted_state
 
     def get_state(self) -> State:
         """
-        Get the current state of the network entity.
+        Get the current cur_state of the network entity.
 
         Returns:
-        State: The current state.
+        State: The current cur_state.
         """
-        return self.state
+        return self.cur_state
 
 
     def reset(self) -> None:
-        self.state = self.init_state
+        self.cur_state = self.init_state
         self.energy_dynamics.reset()
 
     @abstractmethod
@@ -123,7 +123,7 @@ class ElementaryNetworkEntity(NetworkEntity):
 class CompositeNetworkEntity(NetworkEntity):
     """ 
     This class is a composite network entity that is composed of other network entities. It provides an interface for stepping through actions,
-    predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
+    predicting the outcome of actions, getting the current cur_state, updating the cur_state, and getting the reward.
     """
 
     def __init__(self, name: str, sub_entities: dict[str, NetworkEntity] = None, agg_func: AggFunc = None):
@@ -138,24 +138,26 @@ class CompositeNetworkEntity(NetworkEntity):
             
             self.sub_entities[entity_name].step(action, **kwargs)
     # TODO: implement predict
-    def predict(self, actions: Union[np.ndarray, dict[str, EnergyAction]]):
-
+    def predict(self, action: Union[np.ndarray, dict[str, EnergyAction]]):
         predicted_states = {}
-        if type(actions) is np.ndarray:
-            # we convert the entity dict to a list and match action to entities by index
-            sub_entities = list(self.sub_entities.values())
-            for entity_index, action in enumerate(actions):
-                predicted_states[sub_entities[entity_index].name] = sub_entities[entity_index].predict(np.array([action]))
+        return predicted_states
 
-        else:
-            for entity_name, action in actions.items():
-                predicted_states[entity_name] = self.sub_entities[entity_name].predict(action)
+        #if type(actions) is np.ndarray:
+        #    # we convert the entity dict to a list and match action to entities by index
+        #    sub_entities = list(self.sub_entities.values())
+        #    for entity_index, action in enumerate(actions):
+        #        predicted_states[sub_entities[entity_index].name] = sub_entities[entity_index].predict(, np.array(
+        #            [action])
 
-        if self.agg_func:
-            agg_value = self.agg_func(predicted_states)
-            return agg_value
-        else:
-            return predicted_states
+        #else:
+        #    for entity_name, action in actions.items():
+        #        predicted_states[entity_name] = self.sub_entities[entity_name].predict(, action
+
+        #if self.agg_func:
+        #    agg_value = self.agg_func(predicted_states)
+        #    return agg_value
+        #else:
+        #    return predicted_states
 
 
     def get_state(self) -> dict[str, State]:

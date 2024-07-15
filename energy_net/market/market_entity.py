@@ -19,8 +19,8 @@ class MarketEntity(StrategicEntity):
     def step(self, action: EnergyAction) -> [State,Reward]:
         return self.network_entity.step(action)
 
-    def predict(self, action: EnergyAction, state: State) -> [State,Reward]:
-        return self.network_entity.predict(action, state)
+    def predict(self, state: State, action: EnergyAction) -> [State, Reward]:
+        return self.network_entity.predict(state, action)
 
 
 class MarketProducer(MarketEntity):

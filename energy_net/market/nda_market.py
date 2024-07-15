@@ -1,12 +1,24 @@
 from energy_net.market.market_entity import MarketEntity
-from energy_net.market.nda_markets_manager import NDAMarketsManager
-from .model.state import State
-from .defs import Bid
-from .utils.utils import condition, get_predicted_state
+from energy_net.model.action import ConsumeAction
+from energy_net.model.state import State
+from energy_net.defs import Bid
 
 class NDAMarket():
-    def __init__(self, market_entities:list[MarketEntity]):
-        self.market_entities = market_entities
+    def __init__(self, production_entities:list[MarketEntity], consumption_entities:list[MarketEntity], horizons:list[float] = [24, 48], intervals:float = [0.5,0.5]):
+        self.production_entities = production_entities
+        self.consumption_entities = consumption_entities
+        self.horizons = horizons
+        self.intervals = intervals
+
+
+    def step(self, cur_state: State):
+        market_results = {}
+        for horizon in self.horizons:
+            future_state = cur_state.get_timedelta_state(delta_hours=horizon)
+            [demand, bids, workloads, price] = self.do_market_clearing(future_state)
+            market_results[horizon] = [demand, bids, workloads, price]
+
+        return market_results
 
     def do_market_clearing(self, state:State):
         demand = self.collect_demand(state)
@@ -14,20 +26,20 @@ class NDAMarket():
         workloads, price = self.market_clearing_merit_order(demand, bids)
         return [demand,bids,workloads,price]
 
-    def collect_demand(self, state:State)->float:
+    def collect_demand(self, future_state:State)->float:
         total_demand = 0
-        for ma in self.market_entities:
-            cur_prediction = ma.predict({'consumption': {}}, state)
+        for consumer in self.consumption_entities:
+            cur_prediction = consumer.predict(state=future_state, action=ConsumeAction)
             if cur_prediction:
                 total_demand += cur_prediction
         return total_demand
 
     def collect_production_bids(self, state:State, demand:float) -> dict[str, Bid]:
         bids = {}
-        for ma in self.market_entities:
-            bid = ma.get_bid('production',state, demand)
+        for producer in self.production_entities:
+            bid = producer.get_bid('production',state, demand)
             if bid:
-                bids[ma.name] = bid
+                bids[producer.name] = bid
 
         return bids
 
@@ -57,6 +69,5 @@ class NDAMarket():
         workloads, last_bid = self.dispatch(consumption_demand, bids)
         price = self.set_price(workloads, last_bid)
         return workloads, price
-
 
 

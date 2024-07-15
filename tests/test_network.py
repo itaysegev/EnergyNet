@@ -48,7 +48,7 @@ def default_network():
     return Network(name="test_network", strategic_entities=strategic_entities)
 
 
-# Write unit tests to test the initialization of the network and the state of the network
+# Write unit tests to test the initialization of the network and the cur_state of the network
 class TestNetwork(unittest.TestCase):
     def setUp(self):
         # Assuming `default_network` is a function that returns a default Network instance for testing
@@ -74,11 +74,11 @@ class TestNetwork(unittest.TestCase):
     
     # def test_get_state(self):
     #     # Test the get_state method of your Network
-    #     state = self.network.get_state()
-    #     self.assertEqual(state['test_composite'].state['pcsunit_consumption'].state['state_of_charge'], 50)
-    #     self.assertEqual(state['test_composite'].state['test_battery'].state['state_of_charge'], 50)
-    #     self.assertEqual(state['test_composite'].state['test_pv'].state['state_of_charge'], 0)
-    #     self.assertEqual(state['network_battery'].state['state_of_charge'], 0)
+    #     cur_state = self.network.get_state()
+    #     self.assertEqual(cur_state['test_composite'].cur_state['pcsunit_consumption'].cur_state['state_of_charge'], 50)
+    #     self.assertEqual(cur_state['test_composite'].cur_state['test_battery'].cur_state['state_of_charge'], 50)
+    #     self.assertEqual(cur_state['test_composite'].cur_state['test_pv'].cur_state['state_of_charge'], 0)
+    #     self.assertEqual(cur_state['network_battery'].cur_state['state_of_charge'], 0)
     
     
     

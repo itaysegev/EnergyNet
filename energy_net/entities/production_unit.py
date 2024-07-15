@@ -1,6 +1,7 @@
 from energy_net.network_entity import ElementaryNetworkEntity
 from energy_net.dynamics.energy_dynamcis import ProductionDynamics
-from ..model.state import State
+from energy_net.defs import Bounds
+from energy_net.model.state import State
 
 class ProductionUnit(ElementaryNetworkEntity):
     """ A network entity that contains a list of sub-entities. The sub-entities are the devices and the pcsunit itself is the composite entity.

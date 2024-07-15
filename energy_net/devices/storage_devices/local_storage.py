@@ -74,7 +74,7 @@ class Battery(Device):
 
     @property
     def state_of_charge(self):
-        r"""Current state of charge of the storage device."""
+        r"""Current cur_state of charge of the storage device."""
         return self._state_of_charge
     
     @state_of_charge.setter
@@ -84,7 +84,7 @@ class Battery(Device):
         self._state_of_charge = state_of_charge
 
     def reset(self):
-        """Reset `Battery` to initial state."""
+        """Reset `Battery` to initial cur_state."""
         self._power_capacity = self.init_state['power_capacity']
         self._energy_capacity = self.init_state['energy_capacity']
         self._state_of_charge = self.init_state['state_of_charge']

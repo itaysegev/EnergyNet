@@ -77,7 +77,7 @@ class EnergyNetEnv(Environment, ParallelEnv):
         
 
     
-        # state and env objects
+        # cur_state and env objects
         self.__state = None
 
     def reset(self, seed=None, return_info=True, options=None):
@@ -148,10 +148,10 @@ class EnergyNetEnv(Environment, ParallelEnv):
             agent_info['desired_action'] = joint_action[agent]
             # agent_info['performed_transition'] = true_actions[agent]
         
-        # set new state in environment
+        # set new cur_state in environment
         self.__state = new_state
 
-        # get new observations according to the current state
+        # get new observations according to the current cur_state
         obs = self.__observe_all()
         
         # remove done agents from live agents list
@@ -203,17 +203,17 @@ class EnergyNetEnv(Environment, ParallelEnv):
     
     def set_state(self, state):
         """
-        Sets the current environment state
+        Sets the current environment cur_state
 
         Args:
-            state: the state to set in the environment
+            state: the cur_state to set in the environment
         """
         self.__state = state
 
 
     def observe_all(self):
         """
-        gets all agents observations for the given state.
+        gets all agents observations for the given cur_state.
         This is an API exposure of an inner method.
 
         Returns:

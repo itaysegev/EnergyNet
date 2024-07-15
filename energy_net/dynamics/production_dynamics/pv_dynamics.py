@@ -1,7 +1,7 @@
 from ...config import DEFAULT_PRODUCTION
 from ..energy_dynamcis import  ProductionDynamics
 from ...model.action import EnergyAction
-from ...model.state import ProducerState
+from ...model.state import ProductionState
 
 
 class PVDynamics(ProductionDynamics):
@@ -10,7 +10,7 @@ class PVDynamics(ProductionDynamics):
 
     # TODO: Need to check which of the funciton to use for PV.
     #  PV is usually data-driven, although we can compute the raw power production as function of irradiation, location, time and etc.
-    def do(self, action: EnergyAction, state:ProducerState=None , params= None) -> ProducerState:
+    def do(self, action: EnergyAction, state:ProductionState=None, params= None) -> ProductionState:
 
         """Get solar generation output.
         """
@@ -22,9 +22,9 @@ class PVDynamics(ProductionDynamics):
         else:
             return self.get_current_production(state,params)
 
-    # TODO: Not sure if I can pass time_step as a parameter or maybe its inside the state?
+    # TODO: Not sure if I can pass time_step as a parameter or maybe its inside the cur_state?
     '''
-     def do_data_driven(self, action: EnergyAction, state: ProducerState = None, time_step, params=None) -> ProducerState:
+     def do_data_driven(self, action: EnergyAction, cur_state: ProductionState = None, time_step, params=None) -> ProductionState:
 
         """Get solar generation output.
         """
@@ -34,9 +34,9 @@ class PVDynamics(ProductionDynamics):
 
         production_data = [int(x.replace(',', '')) if ',' in x else x for x in production_data]
 
-        state['production'] = production_data[time_step]
+        cur_state['production'] = production_data[time_step]
 
-        return state
+        return cur_state
     '''
 
 

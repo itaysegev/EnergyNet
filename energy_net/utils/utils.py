@@ -1,7 +1,6 @@
 from scipy.integrate import quad
 from scipy.misc import derivative
-from typing import Callable, Any, TypedDict
-import numpy as np
+from typing import Callable, Any
 import matplotlib.pyplot as plt
 
 from ..model.state import State
@@ -22,11 +21,6 @@ def agg_func_sum(element_arr:list[dict[str, Any]])-> dict[str, Any]:
 
 def condition(state:State):
     pass
-
-
-def get_predicted_state(cur_state:State, horizon:float)->State:
-    state = State({'time':cur_state['time']+horizon})
-    return state
 
 
 def get_value_by_type(dict, wanted_type):
@@ -62,8 +56,7 @@ def unit_conversion(dest_units: str, x: float, T: tuple[float, float]) -> float:
         y, _ = quad(x, T[0], T[1])
     return y
 
-def move_time_tick(cur_time):
-    return cur_time+1
+
 
 def plot_data(data, title):
     """

@@ -224,7 +224,7 @@ class Environment:
         
 
     def reset(self):
-        r"""Reset environment to initial state.
+        r"""Reset environment to initial cur_state.
 
         Calls `reset_time_step`.
 
@@ -236,7 +236,7 @@ class Environment:
         self.reset_time_step()
 
     def reset_time_step(self):
-        r"""Reset `time_step` to initial state.
+        r"""Reset `time_step` to initial cur_state.
 
         Sets `time_step` to 0.
         """
