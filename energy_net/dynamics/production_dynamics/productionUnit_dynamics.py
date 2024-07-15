@@ -1,27 +1,26 @@
 from ...config import DEFAULT_PRODUCTION
-from ..energy_dynamcis import  ProductionDynamics
+from ..energy_dynamcis import ProductionDynamics
 from ...model.action import EnergyAction
 from ...model.state import ProducerState
-from numpy.typing import ArrayLike
-import pandas as pd
 
-class PVDynamics(ProductionDynamics):
+
+class ProductionUnitDynamics(ProductionDynamics):
     def __init__(self) -> None:
         super().__init__()
 
     # TODO: Need to check which of the funciton to use for PV.
     #  PV is usually data-driven, although we can compute the raw power production as function of irradiation, location, time and etc.
-    def do(self, action: EnergyAction, state:ProducerState=None , params= None) -> ProducerState:
+    def do(self, action: EnergyAction, state: ProducerState = None, params=None) -> ProducerState:
 
         """Get solar generation output.
         """
         value = action['produce']
         if value is not None:
-           new_state = state.copy()
-           new_state['production'] = min(value, state['max_produce'])
-           return new_state
+            new_state = state.copy()
+            new_state['production'] = min(value, state['max_produce'])
+            return new_state
         else:
-            return self.get_current_production(state,params)
+            return self.get_current_production(state, params)
 
     # TODO: Not sure if I can pass time_step as a parameter or maybe its inside the state?
     '''
@@ -40,10 +39,9 @@ class PVDynamics(ProductionDynamics):
         return state
     '''
 
-
     def get_current_production(self, state, params):
         return DEFAULT_PRODUCTION
-    
+
     def predict(self, action, params, state):
         pass
 
@@ -52,5 +50,7 @@ class PVDynamics(ProductionDynamics):
 
     def predict_production_capability(self, state):
         pass
-    
+
+
+
 

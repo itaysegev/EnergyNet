@@ -1,10 +1,10 @@
 import unittest
 import numpy as np
 
-from energy_net.entities.network_entity import CompositeNetworkEntity
+from energy_net.network_entity import CompositeNetworkEntity
 from energy_net.devices.params import StorageParams, ProductionParams, ConsumptionParams
 from energy_net.dynamics.consumption_dynamics.consumption_dynamics import ElectricHeaterDynamics
-from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
+from energy_net.dynamics.production_dynamics.pv_dynamics import PVDynamics
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
 
 from  energy_net.devices.storage_devices.local_storage import Battery

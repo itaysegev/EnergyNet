@@ -1,9 +1,9 @@
 from energy_net.defs import Bid, State
 from energy_net.market_entity import MarketProducer, MarketConsumer
-from energy_net.network_entity import NetworkEntity, ElementaryNetworkEntity
+from energy_net.network_entity import ElementaryNetworkEntity
 from energy_net.dynamics.energy_dynamcis import ProductionDynamics, ConsumptionDynamics
-from energy_net.network_manager import NetworkManager
-from energy_net.utils import agg_func_sum as AggFuncSum, agg_func_sum
+from energy_net.market.nda_markets_manager import NDAMarketsManager
+from energy_net.utils import agg_func_sum
 
 
 class DummyStationDynamics(ProductionDynamics):
@@ -81,7 +81,7 @@ def test_elementary_network_market():
     consumer4 = DummyConsumer('consumer4', DummyConsumptionDynamics(fixed_consumption=8))
 
 
-    mgr = NetworkManager([station1, station2, station3, station4, station5, consumer1, consumer2, consumer3, consumer4])
+    mgr = NDAMarketsManager([station1, station2, station3, station4, station5, consumer1, consumer2, consumer3, consumer4])
     demand = mgr.collect_demand(None)
     bids = mgr.collect_production_bids(None, demand)
     workloads, price = mgr.market_clearing_merit_order(demand, bids)
@@ -108,7 +108,7 @@ def test_composite_network_market():
 
     # this is the key difference from the elementary implementation
     consumer_aggregator = DummyConsumerAggregator('agg1', [], agg_func_sum)
-    mgr = NetworkManager([station1, station2, station3, station4, station5,consumer_aggregator])
+    mgr = NDAMarketsManager([station1, station2, station3, station4, station5, consumer_aggregator])
     demand = mgr.collect_demand(None)
     bids = mgr.collect_production_bids(None, demand)
     workloads, price = mgr.market_clearing('merit_order',demand, bids)
@@ -131,7 +131,7 @@ def test_market_run():
     consumer4 = DummyMarketConsumer('consumer4', DummyConsumptionDynamics(fixed_consumption=800))
 
     # this is the key difference from the elementary implementation
-    mgr = NetworkManager([station1, station2, station3, station4, station5, consumer1, consumer2, consumer3, consumer4])
+    mgr = NDAMarketsManager([station1, station2, station3, station4, station5, consumer1, consumer2, consumer3, consumer4])
     state = State({'time':0})
     print(mgr.run(state))
 

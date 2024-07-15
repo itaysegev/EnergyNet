@@ -46,6 +46,10 @@ class DataDrivenDynamics(EnergyDynamics):
         # Implement the logic for the 'predict' method
         pass
 
+    @abstractmethod
+    def reset(self):
+        pass
+
 
 class ProductionDynamics(EnergyDynamics):
 
