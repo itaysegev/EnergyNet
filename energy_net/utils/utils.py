@@ -62,9 +62,14 @@ def unit_conversion(dest_units: str, x: float, T: tuple[float, float]) -> float:
         y, _ = quad(x, T[0], T[1])
     return y
 
-def move_time_tick(cur_time):
-    return cur_time+1
-
+def move_time_tick(cur_time, cur_hour):
+    new_time = cur_time + 1
+    if new_time % 2 == 0:
+        cur_hour += 1
+    if cur_hour == 24:
+        cur_hour = 0
+    return new_time, cur_hour 
+    
 def plot_data(data, title):
     """
     Plots the given data against the step number.
@@ -100,4 +105,15 @@ def plot(train_rewards, eval_rewards):
     plt.title('Training and Evaluation Rewards')
     plt.legend()
     plt.show()
+    
+    
+def hourly_pricing(hour):
+    if hour < 6:
+        return 12
+    elif hour < 10:
+        return 14
+    elif hour < 20:
+        return 20
+    else:
+        return 14
 
