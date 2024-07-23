@@ -2,11 +2,12 @@ from typing import TypedDict
 import numpy as np
 
 
-class EnergyAction(TypedDict, total=False):
+class EnergyAction():
     pass
 
-class StorageAction(EnergyAction, total=False):
-    charge: float
+class StorageAction(EnergyAction):
+    def __init__(self, charge: float = 0):
+        self.charge = charge
     
     @classmethod
     def from_numpy(cls, arr: np.ndarray):
@@ -14,22 +15,25 @@ class StorageAction(EnergyAction, total=False):
             raise ValueError("Input array must have a single element")
         return cls(charge=float(arr[0]))
 
-class ProduceAction(EnergyAction, total=False):
-    produce: float = None
+class ProduceAction(EnergyAction):
+    def __init__(self, production: float = 0):
+        self.production = production
     @classmethod
     def from_numpy(cls, arr: np.ndarray):
         if arr.size != 1:
             raise ValueError("Input array must have a single element")
-        return cls(produce=float(arr[0]))
+        return cls(production=float(arr[0]))
 
-class ConsumeAction(EnergyAction, total=False):
-    consume: float = None
+class ConsumeAction(EnergyAction):
+    def __init__(self, consumption: float = 0):
+        self.consumption = consumption
+
     @classmethod
     def from_numpy(cls, arr: np.ndarray):
         if arr.size != 1:
             raise ValueError("Input array must have a single element")
-        return cls(consume=float(arr[0]))
+        return cls(consumption=float(arr[0]))
 
-class TradeAction(EnergyAction, total=False):
-    amount: float
-
+class TradeAction(EnergyAction):
+    def __init__(self, amount: float = 0):
+        self.amount = amount
