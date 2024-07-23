@@ -1,43 +1,43 @@
 from numpy.typing import ArrayLike
+import numpy as np
+from typing import Union
 
 from ..energy_dynamcis import ConsumptionDynamics
-from ...model.action import EnergyAction
-from ...model.state import ConsumerState, State
+from ...model.action import ConsumeAction
+from ...model.state import ConsumptionState, State
 from ...data.data import TimeSeriesData
-
+from ...utils.utils import move_time_tick
 
 class GeneralLoad(ConsumptionDynamics):
-    def __init__(self) -> None:
+    def __init__(self, file_name: str, value_row_name: str, time_row_name: str) -> None:
         super().__init__()
+        self.data = TimeSeriesData(file_name)
+        self.load_data = self.data.get_column(value_row_name)
+        self.time_data = self.data.get_column(time_row_name)
+        self.max_electric_power = self.load_data.max()
 
-    def do(self, action: EnergyAction, state:ConsumerState) -> ConsumerState:
-        """Get electric heater consumption.
+    def do(self, action: Union[np.ndarray, ConsumeAction], state: ConsumptionState = None, params=None) -> ConsumptionState:
+        """Get load consumption based on the current hour."""
+        current_hour = int(state.hour)
+        next_hour = current_hour + 1
+        hour_mask = (self.time_data >= current_hour) & (self.time_data < next_hour)
+        load_data_within_hour = self.load_data[hour_mask]
         
-        Parameters
-        ----------
-        action : ArrayLike
-            Action to be performed. Must be a numpy array.
-        state : HeaterState
-            Current state of the electric heater.
-        return : float
-            Electric heater consumption in [kW].
-        """
-        value = action["consume"] 
-        if value is not None:
-            new_state = state.copy()
-            new_state['consumption'] = min(value, state['max_electric_power'])
-            return new_state	
+        if len(load_data_within_hour) == 0:
+            load = 0.0  # Default value if no data is found
         else:
-            raise ValueError('Invalid action')
+            load = np.random.choice(load_data_within_hour)  # Sample from the data within the current hour
+        
+        new_state = state.copy()
+        assert isinstance(load, float), 'Invalid load data'
+        assert load >= 0, 'Invalid load data'
+        assert load <= state.max_electric_power, 'Invalid load data'
 
-    def do_data_driven(self, time_step, action: EnergyAction = None, state: ConsumerState = None, params = None) -> ConsumerState:
+        new_state.consumption = load
+        new_state.current_time_step, new_state.hour = move_time_tick(state.current_time_step, state.hour)
+        return new_state
+        
 
-        """Get solar generation output.
-        """
-        data = TimeSeriesData('CAISO_net-load_2021.xlsx')
-        load_data = data.get_column('Load')
-
-        return load_data[time_step]
 
     def predict(self, action, params, state):
         pass

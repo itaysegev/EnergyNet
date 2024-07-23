@@ -2,9 +2,9 @@
 import numpy as np
 from ...defs import Bounds
 from ..device import Device
-from ...model.state import ConsumerState
+from ...model.state import ConsumptionState
 from ...model.action import ConsumeAction
-from ...config import MAX_ELECTRIC_POWER, MIN_POWER, MIN_EFFICIENCY, MAX_EFFICIENCY, NO_CONSUMPTION
+from ...config import MAX_ELECTRIC_POWER, MIN_POWER, INITIAL_HOUR, MAX_HOUR, MIN_EFFICIENCY, MAX_EFFICIENCY, NO_CONSUMPTION, INITIAL_TIME, MAX_TIME
 from ..params import ConsumptionParams
 
 class ConsumerDevice(Device):
@@ -22,12 +22,11 @@ class ConsumerDevice(Device):
     """
     
     def __init__(self, consumptionParams:ConsumptionParams):
-        self.max_electric_power = consumptionParams["max_electric_power"] if "max_electric_power" in consumptionParams is None else MAX_ELECTRIC_POWER
-        self.efficiency = consumptionParams["efficiency"] if "efficiency" in consumptionParams else MAX_EFFICIENCY
+        self.max_electric_power = consumptionParams["max_electric_power"] 
         self.init_max_electric_power = self.max_electric_power
         self.consumption = NO_CONSUMPTION
         self.action_type = ConsumeAction
-        init_state = ConsumerState(max_electric_power=self.max_electric_power, efficiency=self.efficiency, consumption=self.consumption)
+        init_state = ConsumptionState(max_electric_power=self.max_electric_power, consumption=self.consumption)
         super().__init__(consumptionParams, init_state=init_state)
 
 
@@ -41,27 +40,11 @@ class ConsumerDevice(Device):
         self._max_electric_power = max_electric_power
 
     @property
-    def current_state(self) -> ConsumerState:
-        return ConsumerState(max_electric_power=self.max_electric_power, efficiency=self.efficiency, consumption=self.consumption)
-    
-    @property
-    def efficiency(self) -> float:
-        return self._efficiency
-    
-    @efficiency.setter
-    def efficiency(self, efficiency: float):
-        assert efficiency >= MIN_EFFICIENCY, 'efficiency must be >= MIN_EFFICIENCY.'
-        self._efficiency = efficiency
+    def current_state(self) -> ConsumptionState:
+        return ConsumptionState(max_electric_power=self.max_electric_power, consumption=self.consumption)
     
 
-    def update_state(self, state: ConsumerState):
-        self.max_electric_power = state.max_electric_power
-        self.efficiency = state.efficiency
-        self.consumption = state.consumption
-        super().update_state(state)
-
-  
-    def reset(self) -> ConsumerState:
+    def reset(self) -> ConsumptionState:
         super().reset()
         self.max_electric_power = self.init_max_electric_power
         self.consumption = NO_CONSUMPTION
@@ -74,8 +57,8 @@ class ConsumerDevice(Device):
 
     def get_observation_space(self):
         # Define the lower and upper bounds for each dimension of the observation space
-        low = np.array([NO_CONSUMPTION, MIN_POWER, MIN_EFFICIENCY])  # Example lower bounds
-        high = np.array([self.max_electric_power, MAX_ELECTRIC_POWER, MAX_EFFICIENCY])  # Example upper bounds
+        low = np.array([INITIAL_TIME, INITIAL_HOUR, MIN_POWER, NO_CONSUMPTION,])  # Example lower bounds
+        high = np.array([MAX_TIME, MAX_HOUR, MAX_ELECTRIC_POWER, self.max_electric_power])  # Example upper bounds
         return Bounds(low=low, high=high, shape=(len(low),), dtype=np.float32)
         
     

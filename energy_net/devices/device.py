@@ -36,9 +36,9 @@ class Device(ElementaryNetworkEntity):
         return {'lifetime_constant': self.__lifetime_constant}
     
     
-    @abstractmethod
+    
     def reset(self) -> None:
-        pass
+        super().reset()
 
     @abstractmethod
     def get_observation_space(self) -> Bounds:
