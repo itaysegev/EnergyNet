@@ -88,7 +88,7 @@ class ElementaryNetworkEntity(NetworkEntity):
         self.init_state = init_state
         self.energy_dynamics = energy_dynamics
 
-    def step(self, action: EnergyAction, **kwargs) -> None:
+    def step(self, action: Union[np.ndarray, EnergyAction], **kwargs) -> None:
         new_state = self.energy_dynamics.do(action=action, state=self.state, **kwargs)
         self.state = new_state
 
@@ -111,9 +111,9 @@ class ElementaryNetworkEntity(NetworkEntity):
     
   
          
-    @abstractmethod
+    
     def reset(self) -> None:
-        pass
+        self.state = self.init_state
 
     @abstractmethod
     def get_observation_space(self) -> Bounds:
@@ -162,13 +162,17 @@ class CompositeNetworkEntity(NetworkEntity):
             return predicted_states
 
 
-    def get_state(self) -> dict[str, State]:
+    def get_state(self, numpy_arr = False) -> dict[str, State]:
         state = {}
         for entity in self.sub_entities.values():
             state[entity.name] = entity.get_state()
         
         if self.agg_func:
             state = self.agg_func(state)
+            
+        if numpy_arr:
+            state = np.concatenate([s.to_numpy() for s in state.values()])
+            
 
         return state
     

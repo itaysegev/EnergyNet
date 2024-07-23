@@ -1,17 +1,12 @@
 from typing import Any, Union, Mapping
 import numpy as np
 
-from ..config import INITIAL_TIME, NO_CONSUMPTION, MAX_CONSUMPTION, NO_CHARGE, MAX_CAPACITY, PRED_CONST_DUMMY, MIN_POWER
-from ..defs import Bounds
-from ..model.action import EnergyAction, StorageAction, TradeAction, ConsumeAction, ProduceAction
 
-from ..model.state import State
-from .network_entity import  CompositeNetworkEntity
-from ..devices.storage_devices.local_storage import Battery
-from ..devices.consumption_devices.local_consumer import ConsumerDevice
-
-from ..devices.params import StorageParams, ProductionParams, ConsumptionParams
-from ..devices.production_devices.local_producer import PrivateProducer
+from ..model.action import EnergyAction
+from energy_net.model.state import PcsunitState
+from .network_entity import  CompositeNetworkEntity, NetworkEntity
+from energy_net.devices.storage_devices.local_storage import Battery
+from energy_net.defs import Bounds
 
 from ..utils.utils import AggFunc
 
@@ -20,16 +15,17 @@ class PCSUnit(CompositeNetworkEntity):
     The PCSUnit entity is responsible for managing the sub-entities and aggregating the reward.
     """
 
-    def __init__(self, name: str, sub_entities: dict[str, Battery, ConsumerDevice, PrivateProducer] = None, agg_func: AggFunc = None):
-        super().__init__(name)
+    def __init__(self, name: str, sub_entities: dict[str, NetworkEntity] = None, agg_func: AggFunc = None):
+        super().__init__(name, sub_entities, agg_func)
 
-    def step(self, actions: dict[str, Union[np.ndarray, EnergyAction]], **kwargs) -> None:
-        for entity_name, action in actions.items():
-            if type(action) is np.ndarray:
-                action = self.sub_entities[entity_name].action_type.from_numpy(action)
-
-            self.sub_entities[entity_name].step(action, **kwargs)
-
+    def step(self, actions: Union[np.ndarray, EnergyAction], **kwargs) -> None:
+        if isinstance(actions, np.ndarray):
+            for entity in self.sub_entities.values():
+                entity.step(actions)
+        else:
+            raise NotImplementedError
+        
+        
     def predict(self, actions: Union[np.ndarray, dict[str, EnergyAction]]):
 
         predicted_states = {}
@@ -51,34 +47,44 @@ class PCSUnit(CompositeNetworkEntity):
             return agg_value
         else:
             return predicted_states
-
-    def get_state(self) -> dict[str, State]:
-        state = {}
-        for entity in self.sub_entities.values():
-            state[entity.name] = entity.get_state()
-
-        if self.agg_func:
-            state = self.agg_func(state)
-
-        return state
-
-    def reset(self) -> None:
-        for entity in self.sub_entities.values():
-            entity.reset()
-
+        
     def get_observation_space(self) -> dict[str, Bounds]:
         obs_space = {}
+        first_entity = True
         for name, entity in self.sub_entities.items():
             obs_space[name] = entity.get_observation_space()
-
+            if first_entity:
+                first_entity = False
+            elif isinstance(entity, Battery):
+                # Remove the time dimension from the observation space due to duplicates
+                obs_space[name].remove_first_dim()
+            else:
+                obs_space[name].remove_first_dim()
+                obs_space[name].remove_first_dim()
+            
         return obs_space
-
+        
     def get_action_space(self) -> dict[str, Bounds]:
         action_space = {}
         for name, entity in self.sub_entities.items():
-            action_space[name] = entity.get_action_space()
-
+            if isinstance(entity, Battery):
+                action_space[name] = entity.get_action_space()
+            
         return action_space
+    
+    def get_state(self, numpy_arr = False) -> dict[str, PcsunitState]:
+        states = {}
+        for entity in self.sub_entities.values():
+            states[entity.name] = entity.get_state()
+        
+        state = PcsunitState(states)
+        
+        if numpy_arr:
+            return state.to_numpy()
+            
+        return state
+
+
 
 
 
