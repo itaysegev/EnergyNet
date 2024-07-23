@@ -1,54 +1,73 @@
 from .entities.network_entity import NetworkEntity
 from typing import Union
 import numpy as np
-from energy_net.model.action import EnergyAction
+
 from energy_net.network_manager import NetworkManager
+from energy_net.stratigic_entity import StrategicEntity
+from energy_net.utils.env_utils import dict_to_numpy_array
 
 from energy_net.defs import Bounds
 
 
 
 class Network():
-    def __init__(self, name: str, strategic_entities: dict[str, NetworkEntity], market_network: Union[list[NetworkEntity], None] = None,
-                physical_network: Union[NetworkEntity, None] = None, network_manager: Union[NetworkManager, None] = None ) -> None:
-        self.strategic_entities = strategic_entities
+    def __init__(self, name: str, strategic_entities: list[StrategicEntity], market_network: Union[list[NetworkEntity], None] = None,
+                grid: Union[NetworkEntity, None] = None) -> None:
+        
+        self.strategic_entities = {se.name: se for se in strategic_entities}
+        self.stratigic_to_network_entity = {se.name: se.network_entity for se in strategic_entities}
         self.market_network = market_network
-        self.physical_network = physical_network
-        self.network_manager = network_manager
+        self.grid = grid
         self.name = name
 
-    def step(self, joint_actions: dict[str, EnergyAction]):
+    def step(self, joint_actions: dict[str, np.ndarray]):
         """
         Advances the simulation by one time step.
         This method should update the state of each network entity.
         """
+        rewards = {}
+        term = {}
+        info = {}
+        states = {}
+        
         for agent_name, action  in joint_actions.items():
-            self.strategic_entities[agent_name].step(action)
+            state = self.stratigic_to_network_entity[agent_name].get_state()
+            self.stratigic_to_network_entity[agent_name].step(action) 
             
+            new_state = self.stratigic_to_network_entity[agent_name].get_state()
+            rewards[agent_name] = self.strategic_entities[agent_name].reward_function(state, action, new_state)
+            term[agent_name] = self.strategic_entities[agent_name].is_done()
+            info[agent_name] = self.strategic_entities[agent_name].get_info()
+            states[agent_name] = new_state
+            
+        
+        return states, rewards, term, info
+    
     def reset(self):
         """
         Resets the state of the network and all its entities to their initial state.
         This is typically used at the beginning of a new episode.
         """
-        for entity in self.strategic_entities.values():
+        for entity in self.stratigic_to_network_entity.values():
             entity.reset()
 
 
-    def get_state(self) -> np.ndarray:
+    def get_state(self) -> dict[str, np.ndarray]:
         """
         Returns the current state of the network.
         """
-        state = []
-        for entity in self.network_entities:
-            state.append(entity.get_state())
-
-        return np.array(state)   
+        state_dict = {}
+        for name, entity in self.stratigic_to_network_entity.items():
+            state_dict[name] = entity.get_state(numpy_arr=True)
+        
+        
+        return state_dict  
 
     def get_observation_space(self) -> dict[str, Bounds]:
         """
         Returns the observation space of the network.
         """
-        return {agent_name: entity.get_observation_space() for agent_name, entity in self.strategic_entities.items()}
+        return {agent_name: entity.get_observation_space() for agent_name, entity in self.stratigic_to_network_entity.items()}
         
         
     
@@ -56,7 +75,7 @@ class Network():
         """
         Returns the action space of the network.
         """ 
-        return {agent_name: entity.get_action_space() for agent_name, entity in self.strategic_entities.items()}
+        return {agent_name: entity.get_action_space() for agent_name, entity in self.stratigic_to_network_entity.items()}
         
-    
+
   
