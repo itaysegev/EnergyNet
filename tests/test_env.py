@@ -3,6 +3,7 @@
 import unittest
 from energy_net.env.base import EpisodeTracker, Environment
 from energy_net.env.EnergyNetEnv import EnergyNetEnv
+from tests.test_network import default_network
 
 class TestEpisodeTracker(unittest.TestCase):
     def setUp(self):
@@ -62,18 +63,17 @@ class TestEnvironment(unittest.TestCase):
 
 class TestEnergyNetEnv(unittest.TestCase):
     def setUp(self):
-        network_lst = []
+        network = default_network() 
         episode_time_steps = 100
         seconds_per_time_step = 60*30
         initial_seed = 0
         simulation_start_time_step = 0
         simulation_end_time_step = 100
-        self.energy_net_env = EnergyNetEnv(network_lst, simulation_start_time_step, simulation_end_time_step, episode_time_steps, seconds_per_time_step, initial_seed)
+        self.energy_net_env = EnergyNetEnv(network, simulation_start_time_step, simulation_end_time_step, episode_time_steps, seconds_per_time_step, initial_seed)
 
     def test_initialization(self):
         self.assertEqual(self.energy_net_env.metadata, {"name": "energy_net_env_v0"})
         self.assertEqual(self.energy_net_env.episode_time_steps, 100)
-        self.assertEqual(self.energy_net_env.num_entities, 0)
         self.assertEqual(self.energy_net_env.seconds_per_time_step, 60*30)
         self.assertEqual(self.energy_net_env.random_seed, 0)
         self.assertEqual(self.energy_net_env.episode_tracker.simulation_end_time_step, 100)
@@ -90,3 +90,4 @@ class TestEnergyNetEnv(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    

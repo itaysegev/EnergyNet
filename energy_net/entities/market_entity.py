@@ -3,11 +3,9 @@ from ..model.state import State
 from ..model.action import EnergyAction
 from ..model.reward import Reward
 from ..defs import Bid
-from energy_net.network_entity import NetworkEntity
-from ..strategic_entity import StrategicEntity
+from .network_entity import NetworkEntity
 
-
-class MarketEntity(StrategicEntity):
+class MarketEntity():
     def __init__(self, name, network_entity:NetworkEntity):
         self.name = name
         self.network_entity = network_entity

@@ -7,15 +7,15 @@ from energy_net.agents.SACAgent import SACAgent
 from energy_net.devices.params import StorageParams, ConsumptionParams, ProductionParams
 from energy_net.env.EnergyNetEnv import EnergyNetEnv
 from energy_net.model.action import EnergyAction, ProduceAction, StorageAction, ConsumeAction
-from energy_net.dynamics.consumption_dynamics.consumption_dynamics import ConsumptionDynamics
-from energy_net.dynamics.production_dynamics.pv_dynamics import PVDynamics
+from energy_net.dynamics.consumption_dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
+from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
-from energy_net.entities.pcs_unit import PCSUnit
+from energy_net.entities.pcsunit import PCSUnit
 from energy_net.devices.params import StorageParams, ConsumptionParams, ProductionParams
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 # Add the project's root directory to sys.path
 from energy_net.env.single_entity_v0 import gym_env
-from common import single_agent_cfgs, get_env_cfgs
+from tests.single_agent_config import single_agent_cfgs, get_env_cfgs
 
 def test_pcsunit():
     with warnings.catch_warnings():
@@ -23,7 +23,7 @@ def test_pcsunit():
 
         # initialize consumer devices
         consumption_params_arr=[]
-        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=ConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=PCSUnitConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
 

@@ -1,3 +1,3 @@
-from .network_agent import NetworkAgent
-from energy_net.network_entity import NetworkEntity
-from energy_net.market.nda_markets_manager import NDAMarketsManager
+
+from .entities.network_entity import NetworkEntity
+from .network_manager import NetworkManager

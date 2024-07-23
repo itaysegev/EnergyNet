@@ -2,13 +2,14 @@ import numpy as np
 import logging
 
 from typing import Any, List, Mapping
-from energy_net.network import Network
 from energy_net.env.base import Environment
 from energy_net.defs import Bounds
 
+
 LOGGER = logging.getLogger()
 
-class NetworkAgent(Environment):
+
+class StrategicEntity(Environment):
     """Base agent class.
 
     Parameters
@@ -20,27 +21,37 @@ class NetworkAgent(Environment):
         Other keyword arguments used to initialize super class.
     """
     
-    def __init__(self, network: Network, **kwargs: Any):
-        self.network = network
+    def __init__(self, name, network_entity, agent=None, reward_function=None):
+        """
+        Initializes a StrategicEntity instance.
 
-        # self.observation_names = self.network.get_observation_names()
-        # self.action_names = self.network.get_action_names()
+        Args:
+            network_entity (NetworkEntity): The associated network entity.
+            agent (Agent): The agent responsible for decision making.
+            reward_function (RewardFunction): The reward function to evaluate performance.
+        """
+        self.network_entity = network_entity
+        self.agent = agent
+        self.reward_function = reward_function
+        self.name = name
+        # self.env = agent.env
 
-        self.observation_space = self.network.get_observation_space()
-        self.action_space = self.network.get_action_space()
-        self.episode_time_steps = self.network.get_episode_time_steps()
+
+        # self.observation_space = self.env.get_observation_space()
+        # self.action_space = self.env.get_action_space()
+        # self.episode_time_steps = self.env.get_episode_time_steps()
         
-        super().__init__(
-            seconds_per_time_step=self.network.seconds_per_time_step,
-            random_seed=self.network.random_seed,
-            episode_tracker=self.network.episode_tracker,
-        )
-        self.reset()
+        # super().__init__(
+        #     seconds_per_time_step=self.env.seconds_per_time_step,
+        #     random_seed=self.env.random_seed,
+        #     episode_tracker=self.env.episode_tracker,
+        # )
+        # self.reset()
 
-    @property
-    def network(self) -> Network:
+    # @property
+    # def env(self) -> EnergyNetEnv:
         
-        return self.__network
+    #     return self.__env
 
     @property
     def observation_names(self) -> List[List[str]]:
@@ -71,12 +82,6 @@ class NetworkAgent(Environment):
         return self.__episode_time_steps
 
     @property
-    def building_metadata(self) -> List[Mapping[str, Any]]:
-        """Building(s) metadata."""
-
-        return self.__building_metadata
-
-    @property
     def action_dimension(self) -> List[int]:
         """Number of returned actions."""
 
@@ -88,9 +93,9 @@ class NetworkAgent(Environment):
 
         return self.__actions
     
-    @network.setter
-    def network(self, network: Network):
-        self.__network = network
+    # @env.setter
+    # def env(self, env: EnergyNetEnv):
+    #     self.__env = env
 
     @observation_names.setter
     def observation_names(self, observation_names: List[List[str]]):
@@ -114,9 +119,6 @@ class NetworkAgent(Environment):
 
         self.__episode_time_steps = episode_time_steps
 
-    @building_metadata.setter
-    def building_metadata(self, building_metadata: List[Mapping[str, Any]]):
-        self.__building_metadata = building_metadata
 
     @actions.setter
     def actions(self, actions: List[List[Any]]):
@@ -234,4 +236,16 @@ class NetworkAgent(Environment):
         super().reset()
         self.__actions = [[[]] for _ in self.action_space]
 
+
+    def is_done(self) -> bool:
+        """Check if the episode is done."""
+
+        return False
+    
+    def get_info(self) -> Mapping[str, Any]:
+        """Get additional information about the stratigic entity."""
+
+        return {}
+    
+    
 

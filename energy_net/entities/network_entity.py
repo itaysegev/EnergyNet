@@ -4,11 +4,11 @@ from collections import OrderedDict
 from typing import Union
 import numpy as np
 
-from energy_net.dynamics.energy_dynamcis import EnergyDynamics
-from energy_net.utils.utils import AggFunc
-from energy_net.model.action import EnergyAction
-from energy_net.model.state import State
-from energy_net.model.reward import Reward
+from ..dynamics.energy_dynamcis import EnergyDynamics
+from ..utils.utils import AggFunc
+from ..model.action import EnergyAction
+from ..model.state import State
+from ..model.reward import Reward
 from energy_net.defs import Bounds
 
 
@@ -88,14 +88,17 @@ class ElementaryNetworkEntity(NetworkEntity):
         self.init_state = init_state
         self.energy_dynamics = energy_dynamics
 
-    def step(self, action: EnergyAction, **kwargs) -> None:
+    def step(self, action: Union[np.ndarray, EnergyAction], **kwargs) -> None:
         new_state = self.energy_dynamics.do(action=action, state=self.state, **kwargs)
         self.state = new_state
 
+            
 
+    # TODO: implement predict
     def predict(self, action: EnergyAction, state: State):
         predicted_state = self.energy_dynamics.predict(action=action, state=state)
         return predicted_state
+
 
     def get_state(self) -> State:
         """
@@ -105,11 +108,12 @@ class ElementaryNetworkEntity(NetworkEntity):
         State: The current state.
         """
         return self.state
-
-
+    
+  
+         
+    
     def reset(self) -> None:
         self.state = self.init_state
-        self.energy_dynamics.reset()
 
     @abstractmethod
     def get_observation_space(self) -> Bounds:
@@ -158,13 +162,17 @@ class CompositeNetworkEntity(NetworkEntity):
             return predicted_states
 
 
-    def get_state(self) -> dict[str, State]:
+    def get_state(self, numpy_arr = False) -> dict[str, State]:
         state = {}
         for entity in self.sub_entities.values():
             state[entity.name] = entity.get_state()
         
         if self.agg_func:
             state = self.agg_func(state)
+            
+        if numpy_arr:
+            state = np.concatenate([s.to_numpy() for s in state.values()])
+            
 
         return state
     

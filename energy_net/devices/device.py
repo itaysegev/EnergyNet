@@ -5,7 +5,7 @@ import numpy as np
 
 
 from .params import DeviceParams
-from energy_net.network_entity import ElementaryNetworkEntity
+from ..entities.network_entity import ElementaryNetworkEntity
 from ..config import DEFAULT_LIFETIME_CONSTANT
 from ..model.state import State
 from energy_net.defs import Bounds
@@ -36,9 +36,9 @@ class Device(ElementaryNetworkEntity):
         return {'lifetime_constant': self.__lifetime_constant}
     
     
-    @abstractmethod
+    
     def reset(self) -> None:
-        pass
+        super().reset()
 
     @abstractmethod
     def get_observation_space(self) -> Bounds:
