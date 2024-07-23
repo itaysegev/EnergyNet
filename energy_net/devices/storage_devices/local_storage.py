@@ -22,11 +22,11 @@ class Battery(Device):
         self._energy_capacity = storage_params.get("energy_capacity", MAX_CAPACITY)
         self._power_capacity = storage_params.get("power_capacity", MAX_CAPACITY)
         self.init_time = storage_params.get("initial_time", INITIAL_TIME)
-        init_state = StorageState(state_of_charge=self._state_of_charge, charging_efficiency=self._charging_efficiency, discharging_efficiency=self._discharging_efficiency, power_capacity=self._power_capacity, energy_capacity=self._energy_capacity, current_time=self.init_time)
+        init_state = StorageState(state_of_charge=self._state_of_charge, charging_efficiency=self._charging_efficiency, discharging_efficiency=self._discharging_efficiency, power_capacity=self._power_capacity, energy_capacity=self._energy_capacity)
         
         super().__init__(storage_params, init_state=init_state)
         self.action_type = StorageAction
-        self.current_time = self.init_time
+        
 
     @property
     def power_capacity(self) -> float:
@@ -74,7 +74,7 @@ class Battery(Device):
 
     @property
     def state_of_charge(self):
-        r"""Current cur_state of charge of the storage device."""
+        r"""Current state of charge of the storage device."""
         return self._state_of_charge
     
     @state_of_charge.setter
@@ -84,36 +84,32 @@ class Battery(Device):
         self._state_of_charge = state_of_charge
 
     def reset(self):
-        """Reset `Battery` to initial cur_state."""
-        self._power_capacity = self.init_state['power_capacity']
-        self._energy_capacity = self.init_state['energy_capacity']
-        self._state_of_charge = self.init_state['state_of_charge']
+        """Reset `Battery` to initial state."""
+        self._power_capacity = self.init_state.power_capacity
+        self._energy_capacity = self.init_state.energy_capacity
+        self._state_of_charge = self.init_state.state_of_charge
         super().reset()
-        self.reset_time()
+
     
     def update_state(self, state: StorageState) -> None:
-        self.energy_capacity = state['energy_capacity']
-        self.power_capacity = state['power_capacity']
-        self.state_of_charge = state['state_of_charge']
-        self.charging_efficiency = state['charging_efficiency']
-        self.discharging_efficiency = state['discharging_efficiency']
-        self.current_time = state['current_time']
+        self.energy_capacity = state.energy_capacity
+        self.power_capacity = state.power_capacity
+        self.state_of_charge = state.state_of_charge
+        self.charging_efficiency = state.charging_efficiency
+        self.discharging_efficiency = state.discharging_efficiency
+        self.current_time = state.current_time
         super().update_state(state)
 
-    def get_reward(self):
-        return 0    
-    
+ 
     def get_action_space(self) -> Bounds:
         low = -self.state_of_charge if self.state_of_charge > MIN_CHARGE else MIN_CHARGE
         return Bounds(low=low, high=(self.energy_capacity - self.state_of_charge), shape=(1,), dtype=np.float32)  
 
     def get_observation_space(self) -> Bounds:
-        low = np.array([MIN_CAPACITY, MIN_CAPACITY, MIN_CHARGE, MIN_EFFICIENCY, MIN_EFFICIENCY, INITIAL_TIME])
-        high = np.array([MAX_CAPACITY, MAX_CAPACITY, self.energy_capacity, MAX_EFFICIENCY, MAX_EFFICIENCY, MAX_TIME])
+        low = np.array([INITIAL_TIME, MIN_CHARGE, MIN_EFFICIENCY, MIN_EFFICIENCY, MIN_CAPACITY, MIN_CAPACITY])
+        high = np.array([MAX_TIME, self.energy_capacity, MAX_EFFICIENCY, MAX_EFFICIENCY, MAX_CAPACITY, MAX_CAPACITY])
         return Bounds(low=low, high=high, shape=(len(low),), dtype=np.float32)
     
-    def reset_time(self):
-        self.current_time = self.init_time
 
 
 

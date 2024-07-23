@@ -1,4 +1,4 @@
-from energy_net.network_entity import ElementaryNetworkEntity
+from energy_net.entities.network_entity import ElementaryNetworkEntity
 from energy_net.dynamics.energy_dynamcis import ConsumptionDynamics
 from energy_net.defs import Bounds
 from energy_net.model.state import State

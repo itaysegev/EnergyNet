@@ -8,7 +8,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from energy_net.env.energy_net_v0 import parallel_env
-from common import test_env_cfgs
+from tests.single_agent_config import test_env_cfgs
 
 NUM_CYCLES = 1000
 NUM_SEEDS = 5

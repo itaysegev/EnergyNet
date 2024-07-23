@@ -14,7 +14,7 @@ from ..model.action import EnergyAction
 from ..model.reward import RewardFunction
 from ..network import Network
 
-from ..utils.env_utils import bounds_to_gym_box
+from ..utils.env_utils import bounds_to_gym_box, assign_indexes
 
 
 class EnergyNetEnv(Environment, ParallelEnv):
@@ -26,7 +26,6 @@ class EnergyNetEnv(Environment, ParallelEnv):
     metadata = {"name": "energy_net_env_v0"}
 
     def __init__(self,
-        network_lst: List[Network],
         network : Network,
         simulation_start_time_step: int = None, # Time step to start simulation
         simulation_end_time_step: int = None, 
@@ -53,7 +52,7 @@ class EnergyNetEnv(Environment, ParallelEnv):
 
         # pettingzoo required attributes
         self.agents = []
-        self.possible_agents = [self.network.strategic_entities.keys()]
+        self.possible_agents = list(self.network.strategic_entities.keys())
         
         
         # default rewards table set
@@ -77,7 +76,7 @@ class EnergyNetEnv(Environment, ParallelEnv):
         
 
     
-        # cur_state and env objects
+        # state and env objects
         self.__state = None
 
     def reset(self, seed=None, return_info=True, options=None):
@@ -97,14 +96,15 @@ class EnergyNetEnv(Environment, ParallelEnv):
         if seed is not None:
             self.seed(seed)
 
-        assert len(self.agents) > 0, "No agents have been set. Please set agents before calling reset."
-
         
-        # reset agents
-        self.agents = self.possible_agents.copy()
         
         # reset network
         self.network.reset()
+        
+        # reset agents
+        self.agents = list(self.network.strategic_entities.keys())
+        
+        
 
         
         self.__state = self.network.get_state()
@@ -140,22 +140,23 @@ class EnergyNetEnv(Environment, ParallelEnv):
         
         
         # step in environment with sampled action
-        new_state, rewards, terms, truncs, infos = self.network.step(joint_action)
+        new_state, rewards, truncs, infos = self.network.step(joint_action)
         
         
         # log desired actions and performed transitions
         for agent, agent_info in infos.items():
             agent_info['desired_action'] = joint_action[agent]
+            
             # agent_info['performed_transition'] = true_actions[agent]
         
-        # set new cur_state in environment
+        # set new state in environment
         self.__state = new_state
 
-        # get new observations according to the current cur_state
+        # get new observations according to the current state
         obs = self.__observe_all()
         
         # remove done agents from live agents list
-        for agent_name, done in terms.items():
+        for agent_name, done in truncs.items():
             if done:
                 self.agents.remove(agent_name)
 
@@ -165,11 +166,10 @@ class EnergyNetEnv(Environment, ParallelEnv):
 
         # #TODO: 
         # # Check if the simulation has reached the end
-        # truncs = {a: False for a in self.agents}
-        # if self.terminated():
-        #     truncs = {a: True for a in self.agents}
-        #     terminations = {a: True for a in self.agents}
-        #     self.agents = []
+        terms = {a: False for a in self.agents}
+        if self.terminated():
+            terms = {a: True for a in self.agents}
+            self.agents = []
 
         self.next_time_step()
 
@@ -203,17 +203,23 @@ class EnergyNetEnv(Environment, ParallelEnv):
     
     def set_state(self, state):
         """
-        Sets the current environment cur_state
+        Sets the current environment state
 
         Args:
-            state: the cur_state to set in the environment
+            state: the state to set in the environment
         """
         self.__state = state
+        
+    def get_state(self):
+        """
+        Returns the current environment state
+        """
+        return self.__state
 
 
     def observe_all(self):
         """
-        gets all agents observations for the given cur_state.
+        gets all agents observations for the given state.
         This is an API exposure of an inner method.
 
         Returns:
@@ -224,7 +230,7 @@ class EnergyNetEnv(Environment, ParallelEnv):
     
     
     def __observe_all(self):
-        return {agent: np.array(list(self.entities[agent].get_state().values()),dtype=np.float32) for agent in self.agents}
+        return {agent: self.network.stratigic_to_network_entity[agent].get_state(numpy_arr=True) for agent in self.agents}
 
     # def convert_space(self, space):
     #     if isinstance(space, dict):
@@ -243,7 +249,7 @@ class EnergyNetEnv(Environment, ParallelEnv):
 
 
     def terminated(self) -> bool:
-        return self.time_step == self.simulation_end_time_step - self.simulation_start_time_step - 1
+        return self.time_step == self.episode_tracker.simulation_end_time_step - self.episode_tracker.simulation_start_time_step - 1
     
 
     def truncated(self) -> bool:
@@ -265,6 +271,9 @@ class EnergyNetEnv(Environment, ParallelEnv):
     
     def get_info(self) -> dict:
         return {agent: {} for agent in self.agents}
+    
+    
+    
     
     
     

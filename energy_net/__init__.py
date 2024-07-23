@@ -1,2 +1,3 @@
-from .network_agent import NetworkAgent
-from energy_net.network_entity import NetworkEntity
+
+from .entities.network_entity import NetworkEntity
+from .network_manager import NetworkManager

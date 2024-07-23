@@ -5,50 +5,76 @@ import numpy as np
 from energy_net.network import Network
 
 from energy_net.entities.network_entity import CompositeNetworkEntity
-from energy_net.devices.params import StorageParams, ProductionParams, ConsumptionParams
-from energy_net.dynamics.consumption_dynamics.consumption_dynamics import ElectricHeaterDynamics
+from energy_net.entities.pcsunit import PCSUnit
+from energy_net.devices.params import StorageParams, ProductionParams, ConsumptionParams, DeviceParams
+from energy_net.dynamics.consumption_dynamics.consumption_dynamics import GeneralLoad
 from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
+from energy_net.dynamics.grid_dynamics import GridDynamics
 
+from energy_net.devices.grid_device import GridDevice
 from  energy_net.devices.storage_devices.local_storage import Battery
 from  energy_net.devices.consumption_devices.local_consumer import ConsumerDevice
 from  energy_net.devices.production_devices.local_producer import PrivateProducer
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
+from energy_net.stratigic_entity import StrategicEntity
 
 from energy_net.model.action import StorageAction, ProduceAction, ConsumeAction
 
-def default_composite():
+
+from stable_baselines3 import PPO
+
+def default_pcsunit():
     # initialize consumer devices
         consumption_params_arr=[]
-        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=ElectricHeaterDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
+        file_name = 'load_consumption_data.xlsx'
+        value_row_name = 'Load[W]'
+        time_row_name = 'Time[hr]'
+    
+        general_load = GeneralLoad(file_name, value_row_name, time_row_name)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=DEFAULT_LIFETIME_CONSTANT, max_electric_power=general_load.max_electric_power)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
         
         # initialize storage devices
         storage_params_arr=[]
-        storage_params = StorageParams(name = 'test_battery', energy_capacity = 100, power_capacity = 200,initial_charge = 50, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
+        storage_params = StorageParams(name = 'test_battery', energy_capacity = 4*1e7, power_capacity = 4*1e7,initial_charge = 0, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
         storage_params_arr.append(storage_params)
         storage_params_dict = {'test_battery': storage_params}
 
         # initialize production devices
         production_params_arr=[]
-        production_params = ProductionParams(name='test_pv', max_production=100, efficiency=0.9, energy_dynamics=PVDynamics())
+        file_name = 'pv_production_data.xlsx'
+        value_row_name = 'Ppv[W]'
+        time_row_name = 'Time[hr]'
+        
+        pv_dynamics = PVDynamics(file_name, value_row_name, time_row_name)
+
+        production_params = ProductionParams(name='test_pv', max_production=pv_dynamics.max_production, efficiency=1, energy_dynamics=pv_dynamics)
         production_params_arr.append(production_params)
         production_params_dict = {'test_pv': production_params}
-
+        
+        
+        
+        grid_params = DeviceParams(name='grid', energy_dynamics=GridDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
+        grid = GridDevice(grid_params)
         sub_entities= {name: ConsumerDevice(params) for name, params in consumption_params_dict.items()}
         sub_entities.update({name: Battery(params) for name, params in storage_params_dict.items()})
         sub_entities.update({name: PrivateProducer(params) for name, params in production_params_dict.items()})
+        sub_entities.update({grid.name: grid})
         # initilaize pcsunit
-        return CompositeNetworkEntity(name="test_composite", sub_entities=sub_entities, agg_func= None)
+        return PCSUnit(name="test_pcsuint", sub_entities=sub_entities, agg_func= None)
 
+def default_reward_function(state, action, new_state):
+    return 0
 
 def default_network():
-    strategic_entities = {'pcs_agent': default_composite()}
+    
+    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=default_reward_function)]
     return Network(name="test_network", strategic_entities=strategic_entities)
 
 
-# Write unit tests to test the initialization of the network and the cur_state of the network
+# Write unit tests to test the initialization of the network and the state of the network
 class TestNetwork(unittest.TestCase):
     def setUp(self):
         # Assuming `default_network` is a function that returns a default Network instance for testing
@@ -59,26 +85,45 @@ class TestNetwork(unittest.TestCase):
         self.assertEqual(self.network.name, "test_network")
         
         # Test the initialization of the Network's strategic entities
-        self.assertEqual(self.network.strategic_entities['pcs_agent'].name, "test_composite")
+        self.assertEqual(self.network.strategic_entities['pcs_agent'].name, "pcs_agent")
+        self.assertEqual(self.network.strategic_entities['pcs_agent'].network_entity.name, "test_pcsuint")
+        self.assertEqual(self.network.strategic_entities['pcs_agent'].reward_function, default_reward_function)
+        
+        
 
     def test_observation_space(self):
         # Test the get_observation_space method of your Network
         obs_space = self.network.get_observation_space()
+        self.assertEqual(len(obs_space['pcs_agent']), 4)
+        
         
         
     def test_action_space(self):
         # Test the get_action_space method of your Network
         action_space = self.network.get_action_space()
+        self.assertEqual(len(action_space), 1)
         
+        
+    def test_state(self):
+        # Test the get_state method of your Network
+        state = self.network.get_state()
+        self.network.step({'pcs_agent': np.array([1.0])})
+        state1 = self.network.get_state()
+        self.network.step({'pcs_agent': np.array([1.0])})
+        state2 = self.network.get_state()
+        self.network.step({'pcs_agent': np.array([1.0])})
+        state3 = self.network.get_state()
+        self.network.reset()
+        state4 = self.network.get_state()
+       
+        
+ 
+        
+        
+
     
-    
-    # def test_get_state(self):
-    #     # Test the get_state method of your Network
-    #     cur_state = self.network.get_state()
-    #     self.assertEqual(cur_state['test_composite'].cur_state['pcsunit_consumption'].cur_state['state_of_charge'], 50)
-    #     self.assertEqual(cur_state['test_composite'].cur_state['test_battery'].cur_state['state_of_charge'], 50)
-    #     self.assertEqual(cur_state['test_composite'].cur_state['test_pv'].cur_state['state_of_charge'], 0)
-    #     self.assertEqual(cur_state['network_battery'].cur_state['state_of_charge'], 0)
+
+
     
     
     

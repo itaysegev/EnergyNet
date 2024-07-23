@@ -56,7 +56,7 @@ class SACAgent(NetworkAgent):
 
         self.model.env.action_space = self.unwrapped.action_space
         self.model.policy.action_space = self.unwrapped.action_space
-        return self.model.predict(, observation[0]
+        return self.model.predict(observation, deterministic=deterministic)[0]
 
     def _log_rewards(self, locals_, globals_):
         self.train_rewards.append(locals_['episode_rewards'][-1])

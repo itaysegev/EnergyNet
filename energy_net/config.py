@@ -19,6 +19,10 @@ MAX_TIME = float('inf')
 INF = float('inf')
 MAX_CONSUMPTION = float('inf')
 PRED_CONST_DUMMY = 100
+MIN_PRICE = 0.0
+MAX_PRICE = 100.0
+INITIAL_HOUR = 0
+MAX_HOUR = 23
 # Define constants for the maximum and minimum exponent values
 MAX_EXPONENT = 200
 MIN_EXPONENT = -200

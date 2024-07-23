@@ -123,7 +123,6 @@ class TestTimeSeriesDataRealFile(unittest.TestCase):
         ts_data.add_column('new_col', new_data)
         self.assertListEqual(list(ts_data.new_col), [1] * len(ts_data.data))
 
-        
     
         
         

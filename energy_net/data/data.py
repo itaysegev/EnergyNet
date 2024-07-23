@@ -69,7 +69,7 @@ class TimeSeriesData:
         self.data[column_name] = data
     
     def save(self, file_name: str):
-        """Save the current cur_state of the dataset to a CSV file."""
+        """Save the current state of the dataset to a CSV file."""
         save_path = os.path.join(DATASETS_DIRECTORY, file_name)
         self.data.to_csv(save_path, index=False)
         print(f"Data saved to {save_path}")

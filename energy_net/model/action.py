@@ -37,4 +37,3 @@ class ConsumeAction(EnergyAction):
 class TradeAction(EnergyAction):
     def __init__(self, amount: float = 0):
         self.amount = amount
-
