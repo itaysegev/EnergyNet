@@ -3,7 +3,7 @@ import numpy as np
 
 from energy_net.entities.network_entity import CompositeNetworkEntity
 from energy_net.devices.params import StorageParams, ProductionParams, ConsumptionParams
-from energy_net.dynamics.consumption_dynamics.consumption_dynamics import ElectricHeaterDynamics
+from energy_net.dynamics.consumption_dynamics.consumption_dynamics import GeneralLoad
 from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
 
@@ -17,7 +17,7 @@ from energy_net.model.action import StorageAction, ProduceAction, ConsumeAction
 def default_composite():
     # initialize consumer devices
         consumption_params_arr=[]
-        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=ElectricHeaterDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=GeneralLoad(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
         

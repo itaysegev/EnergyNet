@@ -15,7 +15,7 @@ from energy_net.devices.params import StorageParams, ConsumptionParams, Producti
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 # Add the project's root directory to sys.path
 from energy_net.env.single_entity_v0 import gym_env
-from common import single_agent_cfgs, get_env_cfgs
+from tests.single_agent_config import single_agent_cfgs, get_env_cfgs
 
 def test_pcsunit():
     with warnings.catch_warnings():

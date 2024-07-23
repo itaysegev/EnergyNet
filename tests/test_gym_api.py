@@ -13,7 +13,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from energy_net.env.single_entity_v0 import gym_env
-from common import single_agent_cfgs
+from tests.single_agent_config import single_agent_cfgs
 
 NUM_SEEDS = 5
 
