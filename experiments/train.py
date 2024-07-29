@@ -71,7 +71,7 @@ def train(
     track=False,
     wandb_project_name="sb3",
     wandb_entity=None,
-    show_progress=False,
+    show_progress=True,
     wandb_tags=[],
     env=None
 ) -> None:
