@@ -35,7 +35,7 @@ def main():
         pass
     
     for algo in ALGO:
-        train(algo=algo, tensorboard_log="./tmp/stable-baselines/", trained_agent="", truncate_last_trajectory=True, n_timesteps=-1,
+        train(env = env, algo=algo, tensorboard_log="./tmp/stable-baselines/", trained_agent="", truncate_last_trajectory=True, n_timesteps=-1,
               num_threads=-1, log_interval=-1, eval_freq=10000, optimization_log_path=None, eval_episodes=10, n_eval_envs=1, save_freq=-1,
               save_replay_buffer=True, log_folder="logs", seed=-1, vec_env="dummy", device="auto", n_trials=500, max_total_trials=None,
               optimize_hyperparameters=True, no_optim_plots=False, n_jobs=1, sampler="tpe", pruner="median", n_startup_trials=10)
