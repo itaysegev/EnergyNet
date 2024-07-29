@@ -10,7 +10,7 @@ energy_net-v0:
   policy: 'MlpPolicy'
   learning_rate: !!float 7.3e-4
   batch_size: 256
-  ent_coef: 'auto'
+  ent_coef: 0.0001
   gamma: 0.99
   normalize: true
   # train_freq: 64
