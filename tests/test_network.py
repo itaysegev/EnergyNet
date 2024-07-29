@@ -27,9 +27,9 @@ from stable_baselines3 import PPO
 def default_pcsunit():
     # initialize consumer devices
         consumption_params_arr=[]
-        file_name = 'load_consumption_data.xlsx'
-        value_row_name = 'Load[W]'
-        time_row_name = 'Time[hr]'
+        file_name = 'train_data.xlsx'
+        value_row_name = 'El [MWh]'
+        time_row_name = 'Hour'
     
         general_load = GeneralLoad(file_name, value_row_name, time_row_name)
         consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=DEFAULT_LIFETIME_CONSTANT, max_electric_power=general_load.max_electric_power)
@@ -44,9 +44,8 @@ def default_pcsunit():
 
         # initialize production devices
         production_params_arr=[]
-        file_name = 'pv_production_data.xlsx'
-        value_row_name = 'Ppv[W]'
-        time_row_name = 'Time[hr]'
+        value_row_name = 'Epv [MWh]'
+
         
         pv_dynamics = PVDynamics(file_name, value_row_name, time_row_name)
 

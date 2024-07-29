@@ -32,67 +32,53 @@ def simulation_reward_function(state, action, new_state):
     price = grid_electricity
     return -1 * price * grid_electricity
 
-def train() -> None:
-    # Define the variables that would normally come from the argparse arguments
-    algo = "sac"
-    tensorboard_log = "./tmp/stable-baselines/"
-    trained_agent = ""
-    truncate_last_trajectory = True
-    n_timesteps = -1
-    num_threads = -1
-    log_interval = -1
-    eval_freq = 10000
-    optimization_log_path = None
-    eval_episodes = 10
-    n_eval_envs = 1
-    save_freq = -1
-    save_replay_buffer = False
-    log_folder = "logs"
-    seed = -1
-    vec_env = "dummy"
-    device = "auto"
-    n_trials = 500
-    max_total_trials = None
-    optimize_hyperparameters = False
-    no_optim_plots = False
-    n_jobs = 1
-    sampler = "tpe"
-    pruner = "median"
-    n_startup_trials = 10
-    n_evaluations = None
-    storage = None
-    study_name = None
-    verbose = 1
-    gym_packages = []
-    env_kwargs = {}
-    eval_env_kwargs = {}
-    hyperparams = {}
-    conf_file = None
-    unique_id = False
-    track = False
-    wandb_project_name = "sb3"
-    wandb_entity = None
-    show_progress = False
-    wandb_tags = []
-    
-    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=simulation_reward_function)]
-    network =  Network(name="test_network", strategic_entities=strategic_entities)
-    
-    env = gym_env(network=network, simulation_start_time_step=0,
-                       simulation_end_time_step=500, episode_time_steps=100,
-                       seconds_per_time_step=60*30, initial_seed=0)
-    try:
-        check_env(env)
-        print('Passed test!! EnergyNetEnv is compatible with SB3 when using the StableBaselines3Wrapper.')
-    finally:
-        pass
-    
+def train(
+    algo="sac",
+    tensorboard_log="./tmp/stable-baselines/",
+    trained_agent="",
+    truncate_last_trajectory=True,
+    n_timesteps=-1,
+    num_threads=-1,
+    log_interval=-1,
+    eval_freq=10000,
+    optimization_log_path=None,
+    eval_episodes=10,
+    n_eval_envs=1,
+    save_freq=-1,
+    save_replay_buffer=False,
+    log_folder="logs",
+    seed=-1,
+    vec_env="dummy",
+    device="auto",
+    n_trials=500,
+    max_total_trials=None,
+    optimize_hyperparameters=False,
+    no_optim_plots=False,
+    n_jobs=1,
+    sampler="tpe",
+    pruner="median",
+    n_startup_trials=10,
+    n_evaluations=None,
+    storage=None,
+    study_name=None,
+    verbose=1,
+    gym_packages=[],
+    env_kwargs={},
+    eval_env_kwargs={},
+    hyperparams={},
+    conf_file=None,
+    unique_id=False,
+    track=False,
+    wandb_project_name="sb3",
+    wandb_entity=None,
+    show_progress=False,
+    wandb_tags=[],
+    env=None
+) -> None:
+
+    assert env is not None, "Environment must be provided"
     
     env_id = "energy_net-v0"
-
-  
-
-
 
     # Unique id to ensure there is no race condition for the folder creation
     uuid_str = f"_{uuid.uuid4()}" if unique_id else ""
@@ -137,7 +123,7 @@ def train() -> None:
         tensorboard_log = f"runs/{run_name}"
 
     exp_manager = ExperimentManager(
-        env = env,
+        env=env,
         algo=algo,
         env_id=env_id,
         log_folder=log_folder,
@@ -192,5 +178,3 @@ def train() -> None:
     else:
         exp_manager.hyperparameters_optimization()
 
-if __name__ == "__main__":
-    train()

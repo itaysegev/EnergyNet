@@ -11,6 +11,10 @@ from stable_baselines3 import PPO
 import time
 import os
 
+
+
+
+
 def simulation_reward_function(state, action, new_state):
     grid_electricity = max(action.item() - state.get_consumption() + state.get_production(), 0)
     price = grid_electricity
@@ -34,22 +38,33 @@ def main():
     network =  Network(name="test_network", strategic_entities=strategic_entities)
     
     env = gym_env(network=network, simulation_start_time_step=0,
-                       simulation_end_time_step=500, episode_time_steps=100,
+                       simulation_end_time_step=48*900, episode_time_steps=48,
                        seconds_per_time_step=60*30, initial_seed=0)
     try:
         check_env(env)
         print('Passed test!! EnergyNetEnv is compatible with SB3 when using the StableBaselines3Wrapper.')
     finally:
         pass
-    model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=logdir)
+    # model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=logdir)
     # model.learn(total_timesteps=env.time_steps*3, log_interval=1)
     obs, _ = env.reset()
+    print(obs, 'init_obs')
     TIMESTEPS = 10000
     iters = 0
     while True:
+        # action, _ = model.predict(obs, deterministic=True)
+        action = env.action_space.sample()
+        obs, rewards, terms, truncs, infos = env.step(action)
+        print(rewards, 'rewards')
+        print(obs, 'obs')
+        if terms or truncs:
+            print('Episode ended')
+            print(iters)
+            break
+        
         iters += 1
-        model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=False, tb_log_name=f"PPO")
-        model.save(f"{models_dir}/{TIMESTEPS*iters}")
+        
+    env.close()
         
     
 

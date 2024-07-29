@@ -5,9 +5,7 @@ from datetime import datetime
 import numpy as np
 
 class State:
-    def __init__(self, current_time_step: int = 0, hour: int = None):
-        if hour is None:
-            hour = datetime.now().hour
+    def __init__(self, current_time_step: int = 0, hour: int = 0):
         self.hour = hour
         self.current_time_step = current_time_step
 
@@ -33,7 +31,7 @@ class State:
         return copy.deepcopy(self)
     
 class GridState(State):
-    def __init__(self, current_time_step: int = 0, hour: int = None, price: float = 0.0):
+    def __init__(self, current_time_step: int = 0, hour: int = 0, price: float = 0.0):
         super().__init__(current_time_step, hour)
         self.price = price
         
@@ -54,7 +52,7 @@ class GridState(State):
         }
 
 class StorageState(State):
-    def __init__(self, current_time_step: int = 0, hour: int = None, state_of_charge: float = DEFAULT_INIT_POWER, 
+    def __init__(self, current_time_step: int = 0, hour: int = 0, state_of_charge: float = DEFAULT_INIT_POWER, 
                  charging_efficiency: float = DEFAULT_EFFICIENCY, discharging_efficiency: float = DEFAULT_EFFICIENCY, 
                  power_capacity: float = DEFAULT_INIT_POWER, energy_capacity: float = DEFAULT_INIT_POWER):
         super().__init__(current_time_step, hour)
@@ -83,7 +81,7 @@ class StorageState(State):
         }
 
 class ProductionState(State):
-    def __init__(self, current_time_step: int = 0, hour: int = None, max_production: float = MAX_PRODUCTION, 
+    def __init__(self, current_time_step: int = 0, hour: int = 0, max_production: float = MAX_PRODUCTION, 
                  production: float = MIN_PRODUCTION):
         super().__init__(current_time_step, hour)
         self.max_production = max_production
@@ -104,7 +102,7 @@ class ProductionState(State):
         }
 
 class ConsumptionState(State):
-    def __init__(self, current_time_step: int = 0, hour: int = None, max_electric_power: float = MAX_ELECTRIC_POWER, 
+    def __init__(self, current_time_step: int = 0, hour: int =0, max_electric_power: float = MAX_ELECTRIC_POWER, 
                  consumption: float = NO_CONSUMPTION):
         super().__init__(current_time_step, hour)
         self.max_electric_power = max_electric_power

@@ -20,6 +20,12 @@ def agg_func_sum(element_arr:list[dict[str, Any]])-> dict[str, Any]:
     return sum_dict
 
 
+def convert_hour_to_int(hour_str):
+    # Split the time string to get the hour part
+    hour_part = hour_str.split(':')[0]
+    # Convert the hour part to an integer
+    return int(hour_part)
+
 def condition(state:State):
     pass
 
