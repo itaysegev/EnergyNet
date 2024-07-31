@@ -15,12 +15,22 @@ class GeneralLoad(ConsumptionDynamics):
         self.load_data = self.data.get_column(value_row_name)
         self.time_data = self.data.get_column(time_row_name).apply(convert_hour_to_int)
         self.max_electric_power = self.load_data.max()
+        self.current_day_start_idx = None
 
     def do(self, action: Union[np.ndarray, ConsumeAction], state: ConsumptionState = None, params=None) -> ConsumptionState:
         """Get load consumption based on the current hour."""
+        num_samples_per_day = 48
+        if state.current_time_step % num_samples_per_day == 0:
+            # Randomly select a new day (48 samples per day)
+            num_days = len(self.load_data) // num_samples_per_day
+            random_day = np.random.randint(0, num_days)
+            self.current_day_start_idx = random_day * num_samples_per_day
+        
+        
+        
         current_hour = int(state.hour)
         next_hour = current_hour + 1
-        idx = state.current_time_step 
+        idx = self.current_day_start_idx + state.current_time_step % num_samples_per_day
         # hour_mask = (self.time_data >= current_hour) & (self.time_data < next_hour)
         load= self.load_data[idx]
         
