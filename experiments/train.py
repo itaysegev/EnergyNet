@@ -40,6 +40,7 @@ def train(
     n_timesteps=-1,
     num_threads=-1,
     log_interval=-1,
+    
     eval_freq=10000,
     optimization_log_path=None,
     eval_episodes=10,
@@ -175,6 +176,7 @@ def train(
         if model is not None:
             exp_manager.learn(model)
             exp_manager.save_trained_model(model)
+            return model
     else:
         exp_manager.hyperparameters_optimization()
 

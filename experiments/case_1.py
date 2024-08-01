@@ -12,14 +12,16 @@ import time
 import os
 
 
-ALGO = ['ppo', 'sac', 'a2c']
+
+
+ALGO = ['ppo']
 
 def simulation_reward_function(state, action, new_state):
     alpha = 0.01
-    grid_electricity = action.item() - state.get_consumption() + state.get_production()
+    grid_electricity = action.item() + state.get_consumption() - state.get_production()
     
     if grid_electricity < 0:
-        return -1_000_000
+        return -1_000
     price = grid_electricity
     return -1 * price * grid_electricity 
 
@@ -38,12 +40,15 @@ def main():
     finally:
         pass
     
-    for algo in ALGO:
-        train(env = env, algo=algo, tensorboard_log="./tmp/stable-baselines_case1/", trained_agent="", truncate_last_trajectory=True, n_timesteps=-1,
-              num_threads=-1, log_interval=-1, eval_freq=10_000, optimization_log_path=None, eval_episodes=10, n_eval_envs=1, save_freq=10_000,
-              save_replay_buffer=True, log_folder="case1_logs", seed=-1, vec_env="dummy", device="auto", n_trials=500, max_total_trials=None,
-              optimize_hyperparameters=False, no_optim_plots=False, n_jobs=1, sampler="tpe", pruner="median", n_startup_trials=10)
     
+    
+    
+    for algo in ALGO:
+        model = train(env = env, algo=algo, tensorboard_log="./tmp/stable-baselines_case1/", trained_agent="", truncate_last_trajectory=True, n_timesteps=10_000,
+              num_threads=-1, log_interval=-1, eval_freq=1_000, optimization_log_path=None, eval_episodes=10, n_eval_envs=1, save_freq=10_000,
+              save_replay_buffer=False, log_folder="case1_logs", seed=-1, vec_env="dummy", device="auto", n_trials=100, max_total_trials=None,
+              optimize_hyperparameters=True, no_optim_plots=False, n_jobs=1, sampler="tpe", pruner="median", n_startup_trials=10)
+        
     
 if __name__ == '__main__':
     main()
