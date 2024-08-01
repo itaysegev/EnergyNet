@@ -38,7 +38,7 @@ def default_pcsunit():
         
         # initialize storage devices
         storage_params_arr=[]
-        storage_params = StorageParams(name = 'test_battery', energy_capacity = 4*1e7, power_capacity = 4*1e7,initial_charge = 0, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
+        storage_params = StorageParams(name = 'test_battery', energy_capacity = 4*1e7, power_capacity = 4*1e7,initial_charge = 0, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 1, energy_dynamics = BatteryDynamics())
         storage_params_arr.append(storage_params)
         storage_params_dict = {'test_battery': storage_params}
 
