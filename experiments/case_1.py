@@ -14,14 +14,14 @@ import os
 
 
 
-ALGO = ['ppo']
+ALGO = ['sac', 'a2c']
 
 def simulation_reward_function(state, action, new_state):
     alpha = 0.01
     grid_electricity = action.item() + state.get_consumption() - state.get_production()
     
     if grid_electricity < 0:
-        return -1 * 1000
+        return -1 *1000
     price = grid_electricity
     return -1 * price * grid_electricity 
 
