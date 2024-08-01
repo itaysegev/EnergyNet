@@ -21,7 +21,7 @@ def simulation_reward_function(state, action, new_state):
     grid_electricity = action.item() + state.get_consumption() - state.get_production()
     
     if grid_electricity < 0:
-        return -1_000
+        return -1 * 1000
     price = grid_electricity
     return -1 * price * grid_electricity 
 
@@ -46,7 +46,7 @@ def main():
     for algo in ALGO:
         model = train(env = env, algo=algo, tensorboard_log="./tmp/stable-baselines_case1/", trained_agent="", truncate_last_trajectory=True, n_timesteps=10_000,
               num_threads=-1, log_interval=-1, eval_freq=1_000, optimization_log_path=None, eval_episodes=10, n_eval_envs=1, save_freq=10_000,
-              save_replay_buffer=False, log_folder="case1_logs", seed=-1, vec_env="dummy", device="auto", n_trials=100, max_total_trials=None,
+              save_replay_buffer=False, log_folder="case1_logs", seed=-1, vec_env="dummy", device="auto", n_trials=200, max_total_trials=None,
               optimize_hyperparameters=True, no_optim_plots=False, n_jobs=1, sampler="tpe", pruner="median", n_startup_trials=10)
         
     
