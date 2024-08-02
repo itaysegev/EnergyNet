@@ -44,9 +44,9 @@ def main():
     
     
     for algo in ALGO:
-        model = train(env = env, algo=algo, tensorboard_log="./tmp/stable-baselines_case1/", trained_agent="", truncate_last_trajectory=True, n_timesteps=-1,
+        model = train(env = env, algo=algo, tensorboard_log="./tmp/stable-baselines_case2/", trained_agent="", truncate_last_trajectory=True, n_timesteps=-1,
               num_threads=-1, log_interval=-1, eval_freq=10_000, optimization_log_path=None, eval_episodes=10, n_eval_envs=1, save_freq=10_000,
-              save_replay_buffer=False, log_folder="case1_logs", seed=-1, vec_env="dummy", device="auto", n_trials=500, max_total_trials=None,
+              save_replay_buffer=False, log_folder="case2_logs", seed=-1, vec_env="dummy", device="auto", n_trials=500, max_total_trials=None,
               optimize_hyperparameters=False, no_optim_plots=False, n_jobs=1, sampler="tpe", pruner="median", n_startup_trials=10)
         
     
