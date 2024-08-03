@@ -1,0 +1,26 @@
+!!python/object/apply:collections.OrderedDict
+- - - batch_size
+    - 512
+  - - ent_coef
+    - 0.002
+  - - env_wrapper
+    - - gymnasium.wrappers.time_limit.TimeLimit:
+          max_episode_steps: 480
+      - rl_zoo3.wrappers.HistoryWrapper:
+          horizon: 48
+  - - gamma
+    - 0.9
+  - - learning_rate
+    - 0.06
+  - - n_timesteps
+    - 1000000.0
+  - - normalize
+    - true
+  - - policy
+    - MlpPolicy
+  - - policy_kwargs
+    - dict(log_std_init=-2, net_arch=[64, 64])
+  - - sde_sample_freq
+    - 64
+  - - use_sde
+    - true
