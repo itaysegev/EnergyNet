@@ -36,7 +36,7 @@ def losses_simulation_reward_function(state, action, new_state):
 
 def main():
 
-    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=losses_simulation_reward_function)]
+    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=simulation_reward_function)]
     network = Network(name="test_network", strategic_entities=strategic_entities)
 
     env = gym_env(network=network, simulation_start_time_step=0,
@@ -53,9 +53,9 @@ def main():
     
     
     for algo in ALGO:
-        model = train(env = env, algo=algo, tensorboard_log="./tmp/stable-baselines_case3/", trained_agent="", truncate_last_trajectory=True, n_timesteps=-1,
+        model = train(env = env, algo=algo, tensorboard_log="./tmp/stable-baselines_case1/", trained_agent="", truncate_last_trajectory=True, n_timesteps=-1,
               num_threads=-1, log_interval=-1, eval_freq=10_000, optimization_log_path=None, eval_episodes=10, n_eval_envs=1, save_freq=10_000,
-              save_replay_buffer=False, log_folder="case3_logs", seed=-1, vec_env="dummy", device="auto", n_trials=500, max_total_trials=None,
+              save_replay_buffer=False, log_folder="case1_logs", seed=-1, vec_env="dummy", device="auto", n_trials=500, max_total_trials=None,
               optimize_hyperparameters=False, no_optim_plots=False, n_jobs=1, sampler="tpe", pruner="median", n_startup_trials=10)
         
     
