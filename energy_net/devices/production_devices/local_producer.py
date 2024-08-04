@@ -27,7 +27,7 @@ class PrivateProducer(Device):
         
         self.max_production = production_params["max_production"]
         self.init_max_production = self.max_production
-        self.production = MIN_PRODUCTION
+        self.production = production_params['init_production']
         self.self_consumption = production_params["self_consumption"] if "self_consumption" in production_params  else DEFAULT_SELF_CONSUMPTION  # self consumption
         self.action_type = ProduceAction
         init_state = ProductionState(max_production=self.max_production, production=self.production)

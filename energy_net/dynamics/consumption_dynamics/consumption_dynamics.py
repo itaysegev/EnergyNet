@@ -15,6 +15,7 @@ class GeneralLoad(ConsumptionDynamics):
         self.load_data = self.data.get_column(value_row_name)
         self.time_data = self.data.get_column(time_row_name).apply(convert_hour_to_int)
         self.max_electric_power = self.load_data.max()
+        self.init_power = self.load_data[0]
         self.current_day_start_idx = None
 
     def do(self, action: Union[np.ndarray, ConsumeAction], state: ConsumptionState = None, params=None) -> ConsumptionState:

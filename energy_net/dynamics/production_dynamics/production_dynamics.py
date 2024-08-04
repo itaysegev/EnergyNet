@@ -15,6 +15,7 @@ class PVDynamics(ProductionDynamics):
         self.solar_data = self.data.get_column(value_row_name)
         self.time_data = self.data.get_column(time_row_name).apply(convert_hour_to_int)
         self.max_production = self.solar_data.max()
+        self.init_production = self.solar_data[0]
         self.current_day_start_idx = None
 
     def do(self, action: Union[np.ndarray, ProduceAction], state: ProductionState = None, params=None) -> ProductionState:
