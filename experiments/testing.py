@@ -62,6 +62,13 @@ def test_pcsunit():
         return PCSUnit(name="test_pcsuint", sub_entities=sub_entities, agg_func= None)
 
 
+def losses_simulation_reward_function(state, action, new_state):
+    alpha = 0.01
+    grid_electricity = action.item() + state.get_consumption() - state.get_production()
+    price = grid_electricity
+    price = price + alpha * price * price
+    return -1 * price * price
+
 def simulation_reward_function(state, action, new_state):
     alpha = 0.01
     grid_electricity = action.item() + state.get_consumption() - state.get_production()
@@ -113,14 +120,14 @@ def collect_observations(env, model, num_steps=48):
 
 # simulate the environment
 
-train_network =  Network(name="train_network", strategic_entities=[StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=simulation_reward_function)])
+train_network =  Network(name="train_network", strategic_entities=[StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=losses_simulation_reward_function)])
 env = gym_env(network=train_network, simulation_start_time_step=0,
                        simulation_end_time_step=48, episode_time_steps=48,
                        seconds_per_time_step=60*30, initial_seed=0)
 
 # simulate the environment
 
-test_network =  Network(name="test_network", strategic_entities=[StrategicEntity(name="pcs_agent", network_entity=test_pcsunit(), reward_function=simulation_reward_function)])
+test_network =  Network(name="test_network", strategic_entities=[StrategicEntity(name="pcs_agent", network_entity=test_pcsunit(), reward_function=losses_simulation_reward_function)])
     
 test_env = gym_env(network=test_network, simulation_start_time_step=0,
                        simulation_end_time_step=48, episode_time_steps=48,
