@@ -32,7 +32,8 @@ def default_pcsunit():
         time_row_name = 'Hour'
     
         general_load = GeneralLoad(file_name, value_row_name, time_row_name)
-        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=1, max_electric_power=general_load.max_electric_power)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=1, max_electric_power=general_load.max_electric_power, init_consum=general_load.init_power, init_consum=general_load.init_power)
+        consumption_params_arr.append(consumption_params)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
         
@@ -49,7 +50,7 @@ def default_pcsunit():
         
         pv_dynamics = PVDynamics(file_name, value_row_name, time_row_name)
 
-        production_params = ProductionParams(name='test_pv', max_production=pv_dynamics.max_production, efficiency=1, energy_dynamics=pv_dynamics)
+        production_params = ProductionParams(name='test_pv', max_production=pv_dynamics.max_production, efficiency=1, energy_dynamics=pv_dynamics,  init_production = pv_dynamics.init_production)
         production_params_arr.append(production_params)
         production_params_dict = {'test_pv': production_params}
         
