@@ -30,6 +30,9 @@ class State:
     def copy(self):
         return copy.deepcopy(self)
     
+    def get_hour(self):
+        return self.hour
+    
 class GridState(State):
     def __init__(self, current_time_step: int = 0, hour: int = 0, price: float = 0.0):
         super().__init__(current_time_step, hour)
@@ -184,5 +187,10 @@ class PcsunitState(State):
     
     def get_consumption(self):
         return self.consumption_state.consumption
+    
+    def get_soc(self):
+        return self.storage_state.state_of_charge
+    
+
     
     

@@ -58,7 +58,7 @@ class Battery(Device):
     @charging_efficiency.setter
     def charging_efficiency(self, charging_efficiency: float):
         charging_efficiency = DEFAULT_EFFICIENCY if charging_efficiency is None else charging_efficiency
-        assert charging_efficiency > MIN_EFFICIENCY and charging_efficiency < MAX_EFFICIENCY, 'charging_efficiency must be between 0 and 1.'
+        assert charging_efficiency >= MIN_EFFICIENCY and charging_efficiency <= MAX_EFFICIENCY, 'charging_efficiency must be between 0 and 1.'
         self._charging_efficiency = charging_efficiency
 
     @property
@@ -69,7 +69,7 @@ class Battery(Device):
     @discharging_efficiency.setter
     def discharging_efficiency(self, discharging_efficiency: float):
         discharging_efficiency = DEFAULT_EFFICIENCY if discharging_efficiency is None else discharging_efficiency
-        assert discharging_efficiency > MIN_EFFICIENCY and discharging_efficiency < MAX_EFFICIENCY, 'discharging_efficiency must be between 0 and 1.'
+        assert discharging_efficiency >= MIN_EFFICIENCY and discharging_efficiency <= MAX_EFFICIENCY, 'discharging_efficiency must be between 0 and 1.'
         self._discharging_efficiency = discharging_efficiency
 
     @property
@@ -97,13 +97,16 @@ class Battery(Device):
         self.state_of_charge = state.state_of_charge
         self.charging_efficiency = state.charging_efficiency
         self.discharging_efficiency = state.discharging_efficiency
-        self.current_time = state.current_time
-        super().update_state(state)
+        
 
- 
     def get_action_space(self) -> Bounds:
+        self.update_state(self.state)
         low = -self.state_of_charge if self.state_of_charge > MIN_CHARGE else MIN_CHARGE
-        return Bounds(low=low, high=(self.energy_capacity - self.state_of_charge), shape=(1,), dtype=np.float32)  
+        high=(self.energy_capacity - self.state_of_charge)
+        # low = - self.energy_capacity
+        # high = self.energy_capacity
+        
+        return Bounds(low=low, high=high, shape=(1,), dtype=np.float32)  
 
     def get_observation_space(self) -> Bounds:
         low = np.array([INITIAL_TIME, MIN_CHARGE, MIN_EFFICIENCY, MIN_EFFICIENCY, MIN_CAPACITY, MIN_CAPACITY])
