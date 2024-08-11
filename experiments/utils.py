@@ -114,14 +114,14 @@ def train_and_save_models(env, path, timesteps=1e5):
     
     
     # Train SAC
-    model_sac = SAC('MlpPolicy', env, verbose=1, n_steps=48, tensorboard_log=tensoerboard_log)
-    model_sac.learn(total_timesteps=timesteps)
+    model_sac = SAC('MlpPolicy', env, verbose=1, tensorboard_log=tensoerboard_log)
+    model_sac.learn(total_timesteps=timesteps, callback=ActionMaskCallback(), progress_bar=True)
     model_sac.save(os.path.join(path, "sac_model"))
     
     
 
     # Train TD3
-    model_td3 = TD3('MlpPolicy', env, verbose=1, n_steps=48,  tensorboard_log=tensoerboard_log)
+    model_td3 = TD3('MlpPolicy', env, verbose=1, tensorboard_log=tensoerboard_log, callback=ActionMaskCallback(), progress_bar=True)
     model_td3.learn(total_timesteps=timesteps)
     model_td3.save(os.path.join(path, "td3_model"))
 
