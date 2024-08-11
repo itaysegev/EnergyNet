@@ -121,8 +121,8 @@ def train_and_save_models(env, path, timesteps=1e5):
     
 
     # Train TD3
-    model_td3 = TD3('MlpPolicy', env, verbose=1, tensorboard_log=tensoerboard_log, callback=ActionMaskCallback(), progress_bar=True)
-    model_td3.learn(total_timesteps=timesteps)
+    model_td3 = TD3('MlpPolicy', env, verbose=1, tensorboard_log=tensoerboard_log)
+    model_td3.learn(total_timesteps=timesteps, callback=ActionMaskCallback(), progress_bar=True )
     model_td3.save(os.path.join(path, "td3_model"))
 
 # Define the function to run models on a new environment and save results
