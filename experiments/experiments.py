@@ -19,7 +19,7 @@ def run_test_case(efficacy, reward_function, name):
 
     # Train and save models
     model_save_path = os.path.join(models_path, name)
-    # train_and_save_models(train_env, model_save_path)
+    train_and_save_models(train_env, model_save_path)
     
     # Load the trained models
     model_ppo = PPO.load(os.path.join(model_save_path, "ppo_model"))
