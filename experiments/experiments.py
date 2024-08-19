@@ -8,11 +8,11 @@ from rewards import simulation_reward_function, losses_simulation_reward_functio
 
 def run_test_case(efficacy, reward_function, name):
     
-    models_path = "Models"
-    output_path = "Excels"
+    models_path = "experiments/Models"
+    output_path = "experiments/Excels"
     
-    # # Create train environment
-    # train_env = create_gym_env("train_network", build_pcsunit('train_data.xlsx', efficiency=efficacy), reward_function)
+    # Create train environment
+    train_env = create_gym_env("train_network", build_pcsunit('train_data.xlsx', efficiency=efficacy), reward_function)
 
     # Create test environment
     test_env = create_gym_env("test_network", build_pcsunit('test_data.xlsx', efficiency=efficacy), reward_function)

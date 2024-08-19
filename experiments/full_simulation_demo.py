@@ -7,7 +7,7 @@ from energy_net.network import Network
 from energy_net.stratigic_entity import StrategicEntity
 
 from stable_baselines3.common.env_checker import check_env
-from train import train
+from experiments.rl_zoo.train import train
 import time
 import os
 

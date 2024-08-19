@@ -49,8 +49,8 @@ def save_observations_to_excel(ppo_observations_all_days, sac_observations_all_d
 
 def build_table_test_case(efficacy, reward_function, name):
 
-    models_path = "Models"
-    output_path = "Excels"
+    models_path = "experiments/Models"
+    output_path = "experiments/Excels"
 
     model_save_path = os.path.join(models_path, name)
 
@@ -71,7 +71,7 @@ def build_table_test_case(efficacy, reward_function, name):
     td3_observations_all_days = []
 
     # Set the directory where the Excel files should be saved
-    output_dir = '/home/itaysegev/EnergyNet/energy_net/data/datasets'
+    output_dir = 'energy_net/data/datasets'
     
     # Load your data
     data = pd.read_excel(os.path.join(output_dir,'test_data.xlsx'))

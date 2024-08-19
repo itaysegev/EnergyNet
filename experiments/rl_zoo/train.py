@@ -23,7 +23,7 @@ from stable_baselines3.common.env_checker import check_env
 
 # Register custom envs
 import rl_zoo3.import_envs  # noqa: F401
-from exp_manager import ExperimentManager
+from experiments.rl_zoo.exp_manager import ExperimentManager
 from rl_zoo3.utils import ALGOS
 
 
