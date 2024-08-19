@@ -48,6 +48,7 @@ class SingleAgentParallelEnvToGymWrapper(BaseParallelWrapper, gym.Env):
         # step using "joint action" of a single agnet as a dictionary
         step_rets = self.env.step({self.env.agents[0]: action})
         
+        
         # unpack step return values from their dictionaries
         return tuple(next(iter(ret.values())) for ret in step_rets)
 

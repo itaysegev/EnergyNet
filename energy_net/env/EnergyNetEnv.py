@@ -97,7 +97,7 @@ class EnergyNetEnv(Environment, ParallelEnv):
             self.seed(seed)
 
         
-        
+        self.info = {'action_space': self.__action_space, 'observation_space': self.__observation_space}
         # reset network
         self.network.reset()
         
@@ -132,7 +132,7 @@ class EnergyNetEnv(Environment, ParallelEnv):
     def observation_space(self, agent: str) -> Box:
         return self.__observation_space[agent]
 
-
+    # @lru_cache(maxsize=None)
     def action_space(self, agent: str) -> Box:
         return self.__action_space[agent]
 

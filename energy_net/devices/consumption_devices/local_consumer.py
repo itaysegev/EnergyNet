@@ -22,9 +22,10 @@ class ConsumerDevice(Device):
     """
     
     def __init__(self, consumptionParams:ConsumptionParams):
-        self.max_electric_power = consumptionParams["max_electric_power"] 
+        self.max_electric_power = consumptionParams["max_electric_power"]
+        
         self.init_max_electric_power = self.max_electric_power
-        self.consumption = NO_CONSUMPTION
+        self.consumption = consumptionParams['init_consum']
         self.action_type = ConsumeAction
         init_state = ConsumptionState(max_electric_power=self.max_electric_power, consumption=self.consumption)
         super().__init__(consumptionParams, init_state=init_state)

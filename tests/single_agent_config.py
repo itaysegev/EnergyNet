@@ -10,7 +10,7 @@ from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
 from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
 
-from test_network import default_network
+from tests.test_network import default_network
 
 
 

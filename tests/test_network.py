@@ -27,30 +27,30 @@ from stable_baselines3 import PPO
 def default_pcsunit():
     # initialize consumer devices
         consumption_params_arr=[]
-        file_name = 'load_consumption_data.xlsx'
-        value_row_name = 'Load[W]'
-        time_row_name = 'Time[hr]'
+        file_name = 'train_data.xlsx'
+        value_row_name = 'El [MWh]'
+        time_row_name = 'Hour'
     
         general_load = GeneralLoad(file_name, value_row_name, time_row_name)
-        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=DEFAULT_LIFETIME_CONSTANT, max_electric_power=general_load.max_electric_power)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=1, max_electric_power=general_load.max_electric_power, init_consum=general_load.init_power)
+        consumption_params_arr.append(consumption_params)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
         
         # initialize storage devices
         storage_params_arr=[]
-        storage_params = StorageParams(name = 'test_battery', energy_capacity = 4*1e7, power_capacity = 4*1e7,initial_charge = 0, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
+        storage_params = StorageParams(name = 'test_battery', energy_capacity = 4, power_capacity = 4, initial_charge = 0, charging_efficiency = 0.9,discharging_efficiency = 0.9, lifetime_constant = 1, energy_dynamics = BatteryDynamics())
         storage_params_arr.append(storage_params)
         storage_params_dict = {'test_battery': storage_params}
 
         # initialize production devices
         production_params_arr=[]
-        file_name = 'pv_production_data.xlsx'
-        value_row_name = 'Ppv[W]'
-        time_row_name = 'Time[hr]'
+        value_row_name = 'Epv [MWh]'
+
         
         pv_dynamics = PVDynamics(file_name, value_row_name, time_row_name)
 
-        production_params = ProductionParams(name='test_pv', max_production=pv_dynamics.max_production, efficiency=1, energy_dynamics=pv_dynamics)
+        production_params = ProductionParams(name='test_pv', max_production=pv_dynamics.max_production, efficiency=1, energy_dynamics=pv_dynamics, init_production = pv_dynamics.init_production)
         production_params_arr.append(production_params)
         production_params_dict = {'test_pv': production_params}
         
