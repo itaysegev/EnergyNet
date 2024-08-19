@@ -1,14 +1,4 @@
-from energy_net.env.single_entity_v0 import gym_env
-from tests.single_agent_config import single_agent_cfgs
 
-from energy_net.env.EnergyNetEnv import EnergyNetEnv
-from tests.test_network import default_pcsunit, default_reward_function
-from energy_net.network import Network
-from energy_net.stratigic_entity import StrategicEntity
-
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3 import PPO
-import time
 from energy_net.env.single_entity_v0 import gym_env
 from tests.single_agent_config import single_agent_cfgs
 from stable_baselines3 import PPO
@@ -30,9 +20,13 @@ from  energy_net.devices.consumption_devices.local_consumer import ConsumerDevic
 from  energy_net.devices.production_devices.local_producer import PrivateProducer
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 from energy_net.stratigic_entity import StrategicEntity
-import os
-import pandas as pd
+from stable_baselines3.common.env_checker import check_env
 
+def simulation_reward_function(state, action, new_state):
+    alpha = 0.01
+    grid_electricity = max(action.item() - state.get_consumption() + state.get_production(), 0)
+    price = grid_electricity
+    return -1 * price * grid_electricity
 
 
 def test_pcsunit():
@@ -43,13 +37,13 @@ def test_pcsunit():
         time_row_name = 'Hour'
     
         general_load = GeneralLoad(file_name, value_row_name, time_row_name)
-        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=1, max_electric_power=general_load.max_electric_power)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=DEFAULT_LIFETIME_CONSTANT, max_electric_power=general_load.max_electric_power)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
         
         # initialize storage devices
         storage_params_arr=[]
-        storage_params = StorageParams(name = 'test_battery', energy_capacity = 4, power_capacity = 4,initial_charge = 0, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 1, energy_dynamics = BatteryDynamics())
+        storage_params = StorageParams(name = 'test_battery', energy_capacity = 4*1e7, power_capacity = 4*1e7,initial_charge = 0, charging_efficiency = 0.9,discharging_efficiency = 0.9, lifetime_constant = 1, energy_dynamics = BatteryDynamics())
         storage_params_arr.append(storage_params)
         storage_params_dict = {'test_battery': storage_params}
 
@@ -76,85 +70,41 @@ def test_pcsunit():
         return PCSUnit(name="test_pcsuint", sub_entities=sub_entities, agg_func= None)
 
 
-def simulation_reward_function(state, action, new_state):
-    alpha = 0.01
-    grid_electricity = action.item() + state.get_consumption() - state.get_production()
+# Example usage
+if __name__ == "__main__":
     
-    if grid_electricity < 0:
-        return -1_000
-    price = grid_electricity
-    return -1 * price * grid_electricity 
+    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=test_pcsunit(), reward_function=simulation_reward_function)]
+    network = Network(name="test_network", strategic_entities=strategic_entities)
 
-
-def main():
-    
-    models_dir = f"models/{int(time.time())}/"
-    logdir = f"logs/{int(time.time())}/"
-    
-    if not os.path.exists(models_dir):
-        os.makedirs(models_dir)
-	    
-
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
-
-    # simulate the environment
-    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=simulation_reward_function)]
-    network =  Network(name="test_network", strategic_entities=strategic_entities)
-    
     env = gym_env(network=network, simulation_start_time_step=0,
                        simulation_end_time_step=48, episode_time_steps=48,
-                       seconds_per_time_step=60*30, initial_seed=0)
+                       seconds_per_time_step=60*30)
+    
     try:
         check_env(env)
         print('Passed test!! EnergyNetEnv is compatible with SB3 when using the StableBaselines3Wrapper.')
     finally:
         pass
     
-    model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=logdir)
-    # model.learn(total_timesteps=1e6, log_interval=1, progress_bar=True)
     
+    # Define the path to the model file
+    model_path = "case1_logs/ppo/energy_net-v0_1/best_model.zip"
     
-    # simulate the environment
-    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=test_pcsunit(), reward_function=simulation_reward_function)]
-    network =  Network(name="test_network", strategic_entities=strategic_entities)
-    
-    env = gym_env(network=network, simulation_start_time_step=0,
-                       simulation_end_time_step=48, episode_time_steps=48,
-                       seconds_per_time_step=60*30, initial_seed=0)
+    model = PPO.load(model_path)
     
     
     # Reset the environment to get the initial observation
-    obs, info = env.reset()
-
-    # List to store actions
-    actions = []
-    rewards = []
-
-    # Perform actions using the trained model for 48 time steps
-    for timestep in range(48):
-        action, _states = model.predict(obs, deterministic=True)
-        obs, reward, terminated, truncated, info = env.step(action)
-        print(obs)
-        actions.append(action)
-        rewards.append(reward)
-        if terminated or truncated:
-            obs, info = env.reset()
-
-    # Create a DataFrame with the actions
-    df_actions = pd.DataFrame(actions, columns=['Action'])
-    df_rewards = pd.DataFrame(rewards,columns=['Reward'])
-
-    # Save the DataFrame to a file
-    print(df_rewards)
-    output_file_path = 'actions.csv'
-    df_actions.to_csv(output_file_path, index=False)
-
-    print(f"Actions saved to {output_file_path}")
-
-    env.close()
-        
+    obs, _ = env.reset()
     
 
-if __name__ == '__main__':
-    main()
+    # Perform actions using the trained model
+    while True:
+        action, _ = model.predict(obs, deterministic=True)
+        obs, rewards, terms, truncs, infos = env.step(action)
+        print(rewards, 'rewards')
+        print(obs, 'obs')
+        if terms or truncs:
+            print('Episode ended')
+            break
+
+    env.close()

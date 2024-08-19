@@ -11,15 +11,15 @@ def run_test_case(efficacy, reward_function, name):
     models_path = "Models"
     output_path = "Excels"
     
-    # Create train environment
-    train_env = create_gym_env("train_network", build_pcsunit('train_data.xlsx', efficiency=efficacy), reward_function)
+    # # Create train environment
+    # train_env = create_gym_env("train_network", build_pcsunit('train_data.xlsx', efficiency=efficacy), reward_function)
 
     # Create test environment
-    test_env = create_gym_env("test_network", build_pcsunit('first_day_data.xlsx', efficiency=efficacy), reward_function)
+    test_env = create_gym_env("test_network", build_pcsunit('test_data.xlsx', efficiency=efficacy), reward_function)
 
     # Train and save models
     model_save_path = os.path.join(models_path, name)
-    train_and_save_models(train_env, model_save_path)
+    # train_and_save_models(train_env, model_save_path)
     
     # Load the trained models
     model_ppo = PPO.load(os.path.join(model_save_path, "ppo_model"))
