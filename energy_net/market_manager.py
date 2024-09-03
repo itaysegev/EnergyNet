@@ -1,14 +1,12 @@
 from energy_net.model.state import State
 
 
-class MarketManager():
-    def __init__(self, name: str, markets):
+class SimpleMarketManager():
+    def __init__(self, name: str, market):
         self.mame = name
-        self.markets = markets
+        self.market = market
 
     def step(self, cur_state:State):
-        markets_results = []
-        for market in self.markets:
-            market_reults = market.step(cur_state)
-            markets_results.append(market_reults)
-        return markets_results
+        market_results = self.market.step(cur_state)
+        return market_results
+
