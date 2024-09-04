@@ -1,12 +1,12 @@
 from typing import Callable, Any, TypedDict
 import numpy as np
 
+# used to represent production price per produced unit
 AmountPricePair = tuple[float, float]
-PriceList = list[AmountPricePair]
-ProductionPredFn = Callable[[Any, ...], PriceList]
-ProductionFn = Callable[[Any, ...], AmountPricePair]
+Bid = list[AmountPricePair]
+#ProductionPredFn = Callable[[Any, ...], Bid]
+#ProductionFn = Callable[[Any, ...], AmountPricePair]
 
-Bid = [float, float]
 
 class Bounds:
     def __init__(self, low: Any, high: Any, dtype: Any, shape: Any):
