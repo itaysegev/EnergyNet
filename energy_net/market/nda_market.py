@@ -1,10 +1,12 @@
+from copy import deepcopy
+
 from energy_net.market.market_entity import MarketEntity
 from energy_net.model.action import ConsumeAction
 from energy_net.model.state import State
 from energy_net.defs import Bid
 
 class NDAMarket():
-    def __init__(self, production_entities:list[MarketEntity], consumption_entities:list[MarketEntity], horizons:list[float] = [24, 48], intervals:float = [0.5,0.5]):
+    def __init__(self, production_entities:list[MarketEntity], consumption_entities:list[MarketEntity], horizons:list[float] = [24, 48], intervals:list[float] = [0.5,0.5]):
         self.production_entities = production_entities
         self.consumption_entities = consumption_entities
         self.horizons = horizons
@@ -14,7 +16,10 @@ class NDAMarket():
     def step(self, cur_state: State):
         market_results = {}
         for horizon in self.horizons:
-            future_state = cur_state.get_timedelta_state(delta_hours=horizon)
+            try:
+                future_state = cur_state.get_timedelta_state(delta_hours=horizon)
+            except TypeError:
+                future_state = deepcopy(cur_state)
             [demand, bids, workloads, price] = self.do_market_clearing(future_state)
             market_results[horizon] = [demand, bids, workloads, price]
 
@@ -37,7 +42,7 @@ class NDAMarket():
     def collect_production_bids(self, state:State, demand:float) -> dict[str, Bid]:
         bids = {}
         for producer in self.production_entities:
-            bid = producer.get_bid('production',state, demand)
+            bid = producer.bid('production',state, demand)
             if bid:
                 bids[producer.name] = bid
 
