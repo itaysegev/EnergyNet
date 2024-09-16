@@ -11,5 +11,6 @@ class ConsumersAgg(ElementaryNetworkEntity):
 
     def get_observation_space(self) -> dict[str, Bounds]:
         pass
+
     def get_action_space(self) -> dict[str, Bounds]:
         pass
