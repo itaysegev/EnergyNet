@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from energy_net.market.market_entity import MarketEntity
+from energy_net.entities.market_entity import MarketEntity
 from energy_net.model.action import ConsumeAction
 from energy_net.model.state import State
 from energy_net.defs import Bid
@@ -42,7 +42,7 @@ class NDAMarket():
     def collect_production_bids(self, state:State, demand:float) -> dict[str, Bid]:
         bids = {}
         for producer in self.production_entities:
-            bid = producer.bid('production',state, demand)
+            bid = producer.get_bid('production', state, demand)
             if bid:
                 bids[producer.name] = bid
 
