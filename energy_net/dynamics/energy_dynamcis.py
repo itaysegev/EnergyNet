@@ -72,7 +72,7 @@ class ProductionDynamics(EnergyDynamics):
 
 class ConsumptionDynamics(EnergyDynamics):
 
-    def __init__(self, dynamics_params: DynamicsParams = None):
+    def  __init__(self, dynamics_params: DynamicsParams = None):
         super().__init__(dynamics_params)
 
     @abstractmethod
