@@ -1,7 +1,7 @@
 import copy
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections import OrderedDict
-from typing import Union
+from typing import Dict, Union, Optional, Any, Callable
 import numpy as np
 
 from ..dynamics.energy_dynamcis import EnergyDynamics
@@ -12,186 +12,404 @@ from ..model.reward import Reward
 from energy_net.defs import Bounds
 
 
-class NetworkEntity:
+class NetworkEntity(ABC):
     """
-    This is a base class for all network entities. It provides an interface for stepping through actions,
-    predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
+    Abstract base class for all network entities. Defines the interface for stepping through actions,
+    predicting outcomes, managing state, and handling rewards.
     """
 
     def __init__(self, name: str):
         """
-        Constructor for the NetworkEntity class.
+        Initialize the NetworkEntity.
 
-        Parameters:
-        name (str): The name of the network entity.
+        Parameters
+        ----------
+        name : str
+            The name of the network entity.
         """
         self.name = name
 
     @abstractmethod
     def step(self, actions: Union[np.ndarray, EnergyAction], **kwargs) -> None:
         """
-        Perform the given action and return the new state and reward.
+        Execute the given action(s) and update the entity's state.
 
-        Parameters:
-        action (EnergyAction): The action to perform.
-
-       """
-        
+        Parameters
+        ----------
+        actions : Union[np.ndarray, EnergyAction]
+            The action(s) to perform.
+        kwargs : Any
+            Additional keyword arguments.
+        """
         pass
-    
-    # TODO: Define the predict method
+
     @abstractmethod
-    def predict(self, action: EnergyAction, state: State):
+    def predict(self, action: EnergyAction, state: State) -> Reward:
         """
         Predict the outcome of performing the given action on the given state.
 
-        Parameters:
-        action (EnergyAction): The action to perform.
-        state (State): The current state.
+        Parameters
+        ----------
+        action : EnergyAction
+            The action to perform.
+        state : State
+            The current state.
 
-        Returns:
-        list: The predicted new state and reward after performing the action.
+        Returns
+        -------
+        Reward
+            The predicted reward after performing the action.
         """
         pass
 
     @abstractmethod
-    def update_system_state(self):
+    def update_system_state(self) -> None:
+        """
+        Update the system's state based on the current dynamics.
+        """
         pass
 
     @abstractmethod
     def get_state(self) -> State:
+        """
+        Retrieve the current state of the network entity.
+
+        Returns
+        -------
+        State
+            The current state.
+        """
         pass
 
     @abstractmethod
     def reset(self) -> None:
+        """
+        Reset the network entity to its initial state.
+        """
         pass
 
     @abstractmethod
     def get_observation_space(self) -> Bounds:
+        """
+        Get the observation space bounds for the entity.
+
+        Returns
+        -------
+        Bounds
+            The observation space bounds.
+        """
         pass
 
     @abstractmethod
     def get_action_space(self) -> Bounds:
+        """
+        Get the action space bounds for the entity.
+
+        Returns
+        -------
+        Bounds
+            The action space bounds.
+        """
         pass
 
 
 class ElementaryNetworkEntity(NetworkEntity):
     """
-    This class is an elementary network entity that is composed of other network entities. It provides an interface for stepping through actions,
-    predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
+    Represents a basic network entity with its own state and energy dynamics.
     """
 
-    def __init__(self, name, energy_dynamics: EnergyDynamics , init_state:State):
-        super().__init__(name)
-        # if the state is none - this is a stateless entity
-        self.state = init_state
-        self.init_state = init_state
-        self.energy_dynamics = energy_dynamics
+    def __init__(self, name: str, energy_dynamics: EnergyDynamics, init_state: State):
+        """
+        Initialize the ElementaryNetworkEntity.
 
-    def step(self, action: Union[np.ndarray, EnergyAction], **kwargs) -> None:
+        Parameters
+        ----------
+        name : str
+            The name of the network entity.
+        energy_dynamics : EnergyDynamics
+            The energy dynamics governing the entity.
+        init_state : State
+            The initial state of the entity.
+        """
+        super().__init__(name)
+        self.energy_dynamics = energy_dynamics
+        self.state = copy.deepcopy(init_state)
+        self.init_state = copy.deepcopy(init_state)
+
+    def step(self, action: Union[np.ndarray, EnergyAction], **kwargs: Any) -> None:
+        """
+        Execute the given action and update the state.
+
+        Parameters
+        ----------
+        action : Union[np.ndarray, EnergyAction]
+            The action to perform.
+        kwargs : Any
+            Additional keyword arguments.
+        """
+        if not (isinstance(action, np.ndarray) or isinstance(action, EnergyAction)):
+            raise TypeError("Unsupported action type.")
+
         new_state = self.energy_dynamics.do(action=action, state=self.state, **kwargs)
         self.state = new_state
 
-            
+    def predict(self, action: EnergyAction, state: State) -> Reward:
+        """
+        Predict the reward for performing the given action on the given state.
 
-    # TODO: implement predict
-    def predict(self, action: EnergyAction, state: State):
+        Parameters
+        ----------
+        action : EnergyAction
+            The action to perform.
+        state : State
+            The current state.
+
+        Returns
+        -------
+        Reward
+            The predicted reward.
+        """
         predicted_state = self.energy_dynamics.predict(action=action, state=state)
-        return predicted_state
+        # Assuming Reward can be derived from the predicted state
+        return self.calculate_reward(predicted_state)
 
+    def calculate_reward(self, state: State) -> Reward:
+        """
+        Calculate the reward based on the state.
+
+        Parameters
+        ----------
+        state : State
+            The state to evaluate.
+
+        Returns
+        -------
+        Reward
+            The calculated reward.
+        """
+        # Placeholder for reward calculation logic
+        return Reward()
+
+    def update_system_state(self) -> None:
+        """
+        Update the system's state based on energy dynamics.
+        """
+        # Placeholder for state update logic
+        pass
 
     def get_state(self) -> State:
         """
-        Get the current state of the network entity.
+        Retrieve the current state of the entity.
 
-        Returns:
-        State: The current state.
+        Returns
+        -------
+        State
+            The current state.
         """
         return self.state
-    
-  
-         
-    
+
     def reset(self) -> None:
-        self.state = self.init_state
+        """
+        Reset the entity to its initial state.
+        """
+        self.state = copy.deepcopy(self.init_state)
 
-    @abstractmethod
     def get_observation_space(self) -> Bounds:
-        pass
+        """
+        Get the observation space bounds for the entity.
 
-    @abstractmethod
+        Returns
+        -------
+        Bounds
+            The observation space bounds.
+        """
+        # Placeholder for observation space definition
+        low = np.array([0.0])  # Example low bounds
+        high = np.array([100.0])  # Example high bounds
+        return Bounds(low=low, high=high, dtype=float)
+
     def get_action_space(self) -> Bounds:
-        pass
+        """
+        Get the action space bounds for the entity.
 
-        
+        Returns
+        -------
+        Bounds
+            The action space bounds.
+        """
+        # Placeholder for action space definition
+        low = np.array([-10.0])  # Example low bounds
+        high = np.array([10.0])  # Example high bounds
+        return Bounds(low=low, high=high, dtype=float)
+
+
 class CompositeNetworkEntity(NetworkEntity):
-    """ 
-    This class is a composite network entity that is composed of other network entities. It provides an interface for stepping through actions,
-    predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
+    """
+    Represents a composite network entity composed of multiple sub-entities.
+    Manages actions and predictions across all sub-entities and aggregates rewards.
     """
 
-    def __init__(self, name: str, sub_entities: dict[str, NetworkEntity] = None, agg_func: AggFunc = None):
+    def __init__(
+        self,
+        name: str,
+        sub_entities: Optional[Dict[str, NetworkEntity]] = None,
+        agg_func: Optional[AggFunc] = None
+    ):
+        """
+        Initialize the CompositeNetworkEntity.
+
+        Parameters
+        ----------
+        name : str
+            The name of the composite network entity.
+        sub_entities : Optional[Dict[str, NetworkEntity]], optional
+            A dictionary of sub-entities managed by this composite entity, by default None.
+        agg_func : Optional[AggFunc], optional
+            A function to aggregate rewards from sub-entities, by default None.
+        """
         super().__init__(name)
-        self.sub_entities = sub_entities
+        self.sub_entities: Dict[str, NetworkEntity] = OrderedDict(sub_entities) if sub_entities else OrderedDict()
         self.agg_func = agg_func
 
-    def step(self, actions: dict[str, Union[np.ndarray, EnergyAction]], **kwargs) -> None:
-        for entity_name, action in actions.items():
-            if type(action) is np.ndarray:
-                action = self.sub_entities[entity_name].action_type.from_numpy(action)
-            
-            self.sub_entities[entity_name].step(action, **kwargs)
-    # TODO: implement predict
-    def predict(self, actions: Union[np.ndarray, dict[str, EnergyAction]]):
+    def step(self, actions: Union[np.ndarray, Dict[str, EnergyAction]], **kwargs: Any) -> None:
+        """
+        Execute actions on all sub-entities.
 
-        predicted_states = {}
-        if type(actions) is np.ndarray:
-            # we convert the entity dict to a list and match action to entities by index
-            sub_entities = list(self.sub_entities.values())
-            for entity_index, action in enumerate(actions):
-                predicted_states[sub_entities[entity_index].name] = sub_entities[entity_index].predict(np.array([action]))
-
-        else:
-            for entity_name, action in actions.items():
-                predicted_states[entity_name] = self.sub_entities[entity_name].predict(action)
-
-        if self.agg_func:
-            agg_value = self.agg_func(predicted_states)
-            return agg_value
-        else:
-            return predicted_states
-
-
-    def get_state(self, numpy_arr = False) -> dict[str, State]:
-        state = {}
-        for entity in self.sub_entities.values():
-            state[entity.name] = entity.get_state()
+        Parameters
+        ----------
+        actions : Union[np.ndarray, Dict[str, EnergyAction]]
+            The actions to perform. Can be a NumPy array (ordered) or a dictionary mapping sub-entity names to actions.
+        kwargs : Any
+            Additional keyword arguments.
         
-        if self.agg_func:
-            state = self.agg_func(state)
-            
-        if numpy_arr:
-            state = np.concatenate([s.to_numpy() for s in state.values()])
-            
+        Raises
+        ------
+        ValueError
+            If the number of actions does not match the number of sub-entities when actions are provided as an array.
+        TypeError
+            If actions are neither a NumPy array nor a dictionary.
+        """
+        if isinstance(actions, np.ndarray):
+            if len(actions) != len(self.sub_entities):
+                raise ValueError(
+                    f"Number of actions ({len(actions)}) does not match number of sub-entities ({len(self.sub_entities)})."
+                )
+            for (entity_name, entity), action in zip(self.sub_entities.items(), actions):
+                entity.step(action, **kwargs)
+        elif isinstance(actions, dict):
+            for entity_name, action in actions.items():
+                if entity_name not in self.sub_entities:
+                    raise ValueError(f"Sub-entity '{entity_name}' does not exist in CompositeNetworkEntity.")
+                self.sub_entities[entity_name].step(action, **kwargs)
+        else:
+            raise TypeError("Actions must be either a NumPy array or a dictionary of EnergyAction instances.")
 
-        return state
-    
+    def predict(self, actions: Union[np.ndarray, Dict[str, EnergyAction]]) -> Union[Reward, Dict[str, Reward]]:
+        """
+        Predict the outcome of performing the given actions on all sub-entities.
+
+        Parameters
+        ----------
+        actions : Union[np.ndarray, Dict[str, EnergyAction]]
+            The actions to predict. Can be a NumPy array (ordered) or a dictionary mapping sub-entity names to actions.
+
+        Returns
+        -------
+        Union[Reward, Dict[str, Reward]]
+            The aggregated reward if agg_func is provided, else a dictionary mapping sub-entity names to their predicted rewards.
+        
+        Raises
+        ------
+        ValueError
+            If the number of actions does not match the number of sub-entities when actions are provided as an array.
+        TypeError
+            If actions are neither a NumPy array nor a dictionary.
+        """
+        predicted_rewards: Dict[str, Reward] = {}
+
+        if isinstance(actions, np.ndarray):
+            if len(actions) != len(self.sub_entities):
+                raise ValueError(
+                    f"Number of actions ({len(actions)}) does not match number of sub-entities ({len(self.sub_entities)})."
+                )
+            for (entity_name, entity), action in zip(self.sub_entities.items(), actions):
+                predicted_rewards[entity_name] = entity.predict(action, entity.get_state())
+        elif isinstance(actions, dict):
+            for entity_name, action in actions.items():
+                if entity_name not in self.sub_entities:
+                    raise ValueError(f"Sub-entity '{entity_name}' does not exist in CompositeNetworkEntity.")
+                predicted_rewards[entity_name] = self.sub_entities[entity_name].predict(action, self.sub_entities[entity_name].get_state())
+        else:
+            raise TypeError("Actions must be either a NumPy array or a dictionary of EnergyAction instances.")
+
+        if self.agg_func:
+            aggregated_reward = self.agg_func(predicted_rewards)
+            return aggregated_reward
+        else:
+            return predicted_rewards
+
+    def update_system_state(self) -> None:
+        """
+        Update the system's state by updating all sub-entities.
+        """
+        for entity in self.sub_entities.values():
+            entity.update_system_state()
+
+    def get_state(self, numpy_arr: bool = False) -> Union[Dict[str, State], np.ndarray, Reward]:
+        """
+        Retrieve the current state of all sub-entities.
+
+        Parameters
+        ----------
+        numpy_arr : bool, optional
+            If True, returns the state as a concatenated NumPy array, by default False.
+
+        Returns
+        -------
+        Union[Dict[str, State], np.ndarray, Reward]
+            The aggregated state as a dictionary, NumPy array, or aggregated Reward if agg_func is provided.
+        """
+        states: Dict[str, State] = {entity_name: entity.get_state() for entity_name, entity in self.sub_entities.items()}
+
+        if self.agg_func:
+            aggregated_state = self.agg_func(states)
+            if numpy_arr:
+                # Assuming aggregated_state can be converted to NumPy
+                return aggregated_state.to_numpy()
+            return aggregated_state
+
+        if numpy_arr:
+            # Concatenate all states into a single NumPy array
+            concatenated = np.concatenate([state.to_numpy() for state in states.values()])
+            return concatenated
+
+        return states
+
     def reset(self) -> None:
+        """
+        Reset all sub-entities to their initial states.
+        """
         for entity in self.sub_entities.values():
             entity.reset()
 
+    def get_observation_space(self) -> Dict[str, Bounds]:
+        """
+        Retrieve the observation space for each sub-entity.
 
-    def get_observation_space(self) -> dict[str, Bounds]:
-        obs_space = {}
-        for name, entity in self.sub_entities.items():
-            obs_space[name] = entity.get_observation_space()
-        
-        return obs_space
-    
+        Returns
+        -------
+        Dict[str, Bounds]
+            A dictionary mapping sub-entity names to their observation bounds.
+        """
+        return {name: entity.get_observation_space() for name, entity in self.sub_entities.items()}
 
-    def get_action_space(self) -> dict[str, Bounds]:
-        action_space = {}
-        for name, entity in self.sub_entities.items():
-            action_space[name] = entity.get_action_space()
-            
-        return action_space
+    def get_action_space(self) -> Dict[str, Bounds]:
+        """
+        Retrieve the action space for each sub-entity.
+
+        Returns
+        -------
+        Dict[str, Bounds]
+            A dictionary mapping sub-entity names to their action bounds.
+        """
+        return {name: entity.get_action_space() for name, entity in self.sub_entities.items()}
