@@ -7,6 +7,38 @@ DATA_DIRECTORY = os.path.join(os.path.dirname(__file__))
 DATASETS_DIRECTORY = os.path.join(DATA_DIRECTORY, 'datasets')
 
 class TimeSeriesData:
+    """
+    TimeSeriesData class for handling time series data from CSV and Excel files.
+    Attributes:
+        file_path (str): Path to the data file.
+        file_type (str): Type of the data file (csv or xlsx).
+        start_time_step (int, optional): Starting time step for slicing the data.
+        end_time_step (int, optional): Ending time step for slicing the data.
+        data (pd.DataFrame): Loaded data as a pandas DataFrame.
+    Methods:
+        __init__(file_name: str, start_time_step: int = None, end_time_step: int = None):
+            Initializes the TimeSeriesData object with the given file name and optional time steps.
+        _get_file_type(file_name: str) -> str:
+            Extracts the file type from the file name.
+        _load_data() -> pd.DataFrame:
+            Loads the data based on the file type.
+        _slice_data(start: int, end: int) -> pd.DataFrame:
+            Slices the data between start and end time steps.
+        __getattr__(name: str):
+            Dynamically gets an attribute if it exists in the data columns.
+        __setattr__(name: str, value: Any):
+            Dynamically sets an attribute if it is a predefined attribute, otherwise sets it in the data.
+        summary():
+            Returns a summary of the dataset.
+        get_column(column_name: str, start_time_step: int = None, end_time_step: int = None):
+            Gets a specific column with optional time step slicing.
+        add_column(column_name: str, data: pd.Series):
+            Adds a new column to the dataset.
+        save(file_name: str):
+            Saves the current state of the dataset to a CSV file.
+        visualize(columns: List[str], start_time_step: int = None, end_time_step: int = None):
+            Visualizes specified columns of the dataset.
+    """
     def __init__(self, file_name: str, start_time_step: int = None, end_time_step: int = None):
         self.file_path = os.path.join(DATASETS_DIRECTORY, file_name)
         self.file_type = self._get_file_type(file_name)
