@@ -1,8 +1,15 @@
 import copy
-from ..config import MIN_PRODUCTION, NO_CONSUMPTION, DEFAULT_INIT_POWER, DEFAULT_EFFICIENCY, INITIAL_TIME, MAX_PRODUCTION, MAX_ELECTRIC_POWER
-from datetime import datetime
-
 import numpy as np
+
+from ..config import (
+    MIN_PRODUCTION,
+    NO_CONSUMPTION,
+    DEFAULT_INIT_POWER,
+    DEFAULT_EFFICIENCY,
+    MAX_PRODUCTION,
+    MAX_ELECTRIC_POWER
+)
+
 
 class State:
     def __init__(self, current_time_step: int = 0, hour: int = 0):
