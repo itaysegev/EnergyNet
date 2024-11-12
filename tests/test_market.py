@@ -3,7 +3,14 @@ import warnings
 from energy_net.dynamics.production_dynamics.simple_production import SimpleProductionDynamics
 from energy_net.market_entity import ControlledProducer, MarketStorage
 from energy_net.market.nda_market import NDAMarket
+<<<<<<< HEAD
 from energy_net.ISO import SimpleMarketManager
+=======
+from energy_net.market.market_manager import SimpleMarketManager
+from energy_net.entities.consumers_agg import ConsumersAgg
+from energy_net.entities.simple_production_unit import SimpleProductionUnit
+from energy_net.model.action import EnergyAction, ProduceAction, StorageAction, ConsumeAction
+>>>>>>> 56e876b696ab19dfab192159662e835d3d96a84f
 from energy_net.dynamics.consumption_dynamics.consumption_dynamics import ConsumptionDynamics
 from energy_net.model.state import State
 from datetime import datetime

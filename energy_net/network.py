@@ -10,12 +10,12 @@ from energy_net.defs import Bounds
 
 class Network():
     def __init__(self, name: str, strategic_entities: list[StrategicEntity], market_network: Union[list[GridEntity], None] = None,
-                 grid: Union[GridEntity, None] = None) -> None:
-        
+                 electrical_grid: Union[GridEntity, None] = None) -> None:
+
         self.strategic_entities = {se.name: se for se in strategic_entities}
         self.stratigic_to_network_entity = {se.name: se.network_entity for se in strategic_entities}
         self.market_network = market_network
-        self.grid = grid
+        self.electrical_grid = electrical_grid
         self.name = name
 
     def step(self, joint_actions: dict[str, np.ndarray]):

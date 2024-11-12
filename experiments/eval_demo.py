@@ -27,12 +27,12 @@ def simulation_reward_function(state, action, new_state):
 def test_pcsunit():
     # initialize consumer components
         consumption_params_arr=[]
-        file_name = 'first_day_data.xlsx'
+        file_name = 'test_data.xlsx'
         value_row_name = 'El [MWh]'
         time_row_name = 'Hour'
     
         general_load = GeneralLoad(file_name, value_row_name, time_row_name)
-        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=DEFAULT_LIFETIME_CONSTANT, max_electric_power=general_load.max_electric_power)
+        consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=general_load, lifetime_constant=DEFAULT_LIFETIME_CONSTANT, max_electric_power=general_load.max_electric_power, init_consum=0)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
         
@@ -49,7 +49,7 @@ def test_pcsunit():
         
         pv_dynamics = PVDynamics(file_name, value_row_name, time_row_name)
 
-        production_params = ProductionParams(name='test_pv', max_production=pv_dynamics.max_production, efficiency=1, energy_dynamics=pv_dynamics)
+        production_params = ProductionParams(name='test_pv', max_production=pv_dynamics.max_production, efficiency=1, energy_dynamics=pv_dynamics, lifetime_constant=DEFAULT_LIFETIME_CONSTANT, init_production=0)
         production_params_arr.append(production_params)
         production_params_dict = {'test_pv': production_params}
         

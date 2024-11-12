@@ -9,6 +9,20 @@ Bid = list[AmountPricePair]
 
 
 class Bounds:
+    """
+    Represents the bounds for observations or actions in the simulation environment.
+
+    Attributes
+    ----------
+    low : Union[np.ndarray, List[float]]
+        The lower bound of the space.
+    high : Union[np.ndarray, List[float]]
+        The upper bound of the space.
+    dtype : type
+        The data type of the bounds (e.g., `float`, `int`).
+    shape : tuple
+        The shape of the bound space.
+    """
     def __init__(self, low: Any, high: Any, dtype: Any, shape: Any):
         self.low = low
         self.high = high
