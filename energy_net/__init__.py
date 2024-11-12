@@ -1,3 +1,2 @@
 
-from .entities.network_entity import NetworkEntity
-from .network_manager import NetworkManager
+from energy_net.grid_entity import GridEntity

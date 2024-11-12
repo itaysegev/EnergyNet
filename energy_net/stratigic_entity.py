@@ -26,7 +26,7 @@ class StrategicEntity(Environment):
         Initializes a StrategicEntity instance.
 
         Args:
-            network_entity (NetworkEntity): The associated network entity.
+            network_entity (GridEntity): The associated network entity.
             agent (Agent): The agent responsible for decision making.
             reward_function (RewardFunction): The reward function to evaluate performance.
         """

@@ -5,7 +5,7 @@ import numpy as np
 
 
 from .params import DeviceParams
-from ..entities.network_entity import ElementaryNetworkEntity
+from energy_net.grid_entity import ElementaryGridEntity
 from ..config import DEFAULT_LIFETIME_CONSTANT
 from ..model.state import State
 from energy_net.defs import Bounds
@@ -13,7 +13,7 @@ from energy_net.defs import Bounds
 np.seterr(divide='ignore', invalid='ignore')
 
 
-class Device(ElementaryNetworkEntity):
+class Device(ElementaryGridEntity):
     """Base device class.
     """
 

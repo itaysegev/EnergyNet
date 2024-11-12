@@ -1,6 +1,6 @@
 # main.py
 
-from energy_net.entities.market_entity import MarketRegulatedProducer, MarketStorage
+from energy_net.market_entity import ControlledProducer, MarketStorage
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,7 +14,7 @@ def test_market_with_production():
     predicted_prices = [50 + 20 * np.cos((i + 5) * np.pi / 24) for i in intervals]
 
     # Initialize market players with access to predicted demand and prices
-    producer = MarketRegulatedProducer(predicted_demand, predicted_prices, production_capacity=200)
+    producer = ControlledProducer(predicted_demand, predicted_prices, production_capacity=200)
     # consumer = MarketConsumer(predicted_demand, predicted_prices, consumption_demand=80)
     storage = MarketStorage(predicted_demand, predicted_prices, storage_capacity=100, initial_storage=0, charge_rate=100,
                             discharge_rate=100)

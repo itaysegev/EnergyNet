@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from energy_net.entities.market_entity import MarketEntity
+from energy_net.market_entity import MarketEntity
 from energy_net.model.action import ConsumeAction
 from energy_net.model.state import State
 from energy_net.defs import Bid

@@ -10,7 +10,7 @@ from ..data.data import TimeSeriesData
 class EnergyDynamics():
     def __init__(self, dynamics_params:DynamicsParams = None):
         """
-        Constructor for the NetworkEntity class.
+        Constructor for the GridEntity class.
 
         Parameters:
         name (str): The name of the network entity.

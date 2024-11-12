@@ -1,6 +1,6 @@
 from energy_net.defs import Bid, State
 from energy_net.market_entity import MarketProducer, MarketConsumer
-from energy_net.network_entity import ElementaryNetworkEntity
+from energy_net.grid_entity import ElementaryGridEntity
 from energy_net.dynamics.energy_dynamcis import ProductionDynamics, ConsumptionDynamics
 from energy_net.utils import agg_func_sum
 
@@ -24,7 +24,7 @@ class DummyStationDynamics(ProductionDynamics):
             raise NotImplemented('stations can only produce')
 
 
-class DummyProducer(ElementaryNetworkEntity):
+class DummyProducer(ElementaryGridEntity):
     def __init__(self, name, energy_dynamics: ProductionDynamics):
         super().__init__(name, energy_dynamics=energy_dynamics)
 
@@ -145,8 +145,8 @@ if __name__ == "__main__":
 # building 1: driven by a data file that determines what happens at each step (like CityLearn)
 # building 2: is modeled as a single unit (no sub-entities) that has a solar pannel and a batery
 # building 3: a building modeled as 4 appartments (sub-entities), all of which consume energy, and 2 have solar pannels and batteries
-# building 4: a building that models 4 appartments, 2 are modeled as a single unit, 1 has several consumer devices, and 1 is data driven.
-# building 5: a house with many devices, each device can only consume, but the house has a single battery.
+# building 4: a building that models 4 appartments, 2 are modeled as a single unit, 1 has several consumer components, and 1 is data driven.
+# building 5: a house with many components, each device can only consume, but the house has a single battery.
 
 
 #b1 = ...
@@ -165,4 +165,4 @@ if __name__ == "__main__":
 
 
 
-#my_neighborhood = NetworkEntity(sub_entities=[b1, b2, b3, b4, b5])
+#my_neighborhood = GridEntity(sub_entities=[b1, b2, b3, b4, b5])

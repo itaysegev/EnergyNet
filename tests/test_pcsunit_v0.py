@@ -1,39 +1,36 @@
 
 import warnings
 
-import numpy as np
-
 from energy_net.agents.SACAgent import SACAgent
-from energy_net.devices.params import StorageParams, ConsumptionParams, ProductionParams
-from energy_net.env.EnergyNetEnv import EnergyNetEnv
-from energy_net.model.action import EnergyAction, ProduceAction, StorageAction, ConsumeAction
+from energy_net.model.action import ProduceAction, StorageAction, ConsumeAction
 from energy_net.dynamics.consumption_dynamics.consumption_dynamics import PCSUnitConsumptionDynamics
 from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
-from energy_net.entities.pcsunit import PCSUnit
-from energy_net.devices.params import StorageParams, ConsumptionParams, ProductionParams
+from energy_net.components.pcsunit import PCSUnit
+from energy_net.components.params import StorageParams, ConsumptionParams, ProductionParams
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 # Add the project's root directory to sys.path
 from energy_net.env.single_entity_v0 import gym_env
-from tests.single_agent_config import single_agent_cfgs, get_env_cfgs
+from tests.single_agent_config import single_agent_cfgs
+
 
 def test_pcsunit():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-        # initialize consumer devices
+        # initialize consumer components
         consumption_params_arr=[]
         consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=PCSUnitConsumptionDynamics(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
 
-        # initialize storage devices
+        # initialize storage components
         storage_params_arr=[]
         storage_params = StorageParams(name = 'test_battery', energy_capacity = 100, power_capacity = 200,inital_charge = 50, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
         storage_params_arr.append(storage_params)
         storage_params_dict = {'test_battery': storage_params}
 
-        # initialize production devices
+        # initialize production components
         production_params_arr=[]
         production_params = ProductionParams(name='test_pv', max_production=100, efficiency=0.9, energy_dynamics=PVDynamics())
         production_params_arr.append(production_params)

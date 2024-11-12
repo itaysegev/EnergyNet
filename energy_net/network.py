@@ -1,18 +1,16 @@
-from .entities.network_entity import NetworkEntity
+from energy_net.grid_entity import GridEntity
 from typing import Union
 import numpy as np
 
-from energy_net.network_manager import NetworkManager
 from energy_net.stratigic_entity import StrategicEntity
-from energy_net.utils.env_utils import dict_to_numpy_array
 
 from energy_net.defs import Bounds
 
 
 
 class Network():
-    def __init__(self, name: str, strategic_entities: list[StrategicEntity], market_network: Union[list[NetworkEntity], None] = None,
-                grid: Union[NetworkEntity, None] = None) -> None:
+    def __init__(self, name: str, strategic_entities: list[StrategicEntity], market_network: Union[list[GridEntity], None] = None,
+                 grid: Union[GridEntity, None] = None) -> None:
         
         self.strategic_entities = {se.name: se for se in strategic_entities}
         self.stratigic_to_network_entity = {se.name: se.network_entity for se in strategic_entities}

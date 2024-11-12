@@ -4,15 +4,15 @@ from collections import OrderedDict
 from typing import Union
 import numpy as np
 
-from ..dynamics.energy_dynamcis import EnergyDynamics
-from ..utils.utils import AggFunc
-from ..model.action import EnergyAction
-from ..model.state import State
-from ..model.reward import Reward
+from energy_net.dynamics.energy_dynamcis import EnergyDynamics
+from energy_net.utils.utils import AggFunc
+from energy_net.model.action import EnergyAction
+from energy_net.model.state import State
+from energy_net.model.reward import Reward
 from energy_net.defs import Bounds
 
 
-class NetworkEntity:
+class GridEntity:
     """
     This is a base class for all network entities. It provides an interface for stepping through actions,
     predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
@@ -20,7 +20,7 @@ class NetworkEntity:
 
     def __init__(self, name: str):
         """
-        Constructor for the NetworkEntity class.
+        Constructor for the GridEntity class.
 
         Parameters:
         name (str): The name of the network entity.
@@ -75,7 +75,7 @@ class NetworkEntity:
         pass
 
 
-class ElementaryNetworkEntity(NetworkEntity):
+class ElementaryGridEntity(GridEntity):
     """
     This class is an elementary network entity that is composed of other network entities. It provides an interface for stepping through actions,
     predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
@@ -124,13 +124,13 @@ class ElementaryNetworkEntity(NetworkEntity):
         pass
 
         
-class CompositeNetworkEntity(NetworkEntity):
+class CompositeGridEntity(GridEntity):
     """ 
     This class is a composite network entity that is composed of other network entities. It provides an interface for stepping through actions,
     predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
     """
 
-    def __init__(self, name: str, sub_entities: dict[str, NetworkEntity] = None, agg_func: AggFunc = None):
+    def __init__(self, name: str, sub_entities: dict[str, GridEntity] = None, agg_func: AggFunc = None):
         super().__init__(name)
         self.sub_entities = sub_entities
         self.agg_func = agg_func
