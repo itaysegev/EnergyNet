@@ -1,33 +1,33 @@
 import unittest
 import numpy as np
 
-from energy_net.entities.network_entity import CompositeNetworkEntity
-from energy_net.devices.params import StorageParams, ProductionParams, ConsumptionParams
+from energy_net.grid_entity import CompositeGridEntity
+from energy_net.components.params import StorageParams, ProductionParams, ConsumptionParams
 from energy_net.dynamics.consumption_dynamics.consumption_dynamics import GeneralLoad
 from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
 
-from  energy_net.devices.storage_devices.local_storage import Battery
-from  energy_net.devices.consumption_devices.local_consumer import ConsumerDevice
-from  energy_net.devices.production_devices.local_producer import PrivateProducer
+from  energy_net.components.storage_devices.local_storage import Battery
+from  energy_net.components.consumption_devices.local_consumer import ConsumerDevice
+from  energy_net.components.production_devices.local_producer import PrivateProducer
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 
 from energy_net.model.action import StorageAction, ProduceAction, ConsumeAction
 
 def default_composite():
-    # initialize consumer devices
+    # initialize consumer components
         consumption_params_arr=[]
         consumption_params = ConsumptionParams(name='pcsunit_consumption', energy_dynamics=GeneralLoad(), lifetime_constant=DEFAULT_LIFETIME_CONSTANT)
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
         
-        # initialize storage devices
+        # initialize storage components
         storage_params_arr=[]
         storage_params = StorageParams(name = 'test_battery', energy_capacity = 100, power_capacity = 200,initial_charge = 50, charging_efficiency = 1,discharging_efficiency = 1, lifetime_constant = 15, energy_dynamics = BatteryDynamics())
         storage_params_arr.append(storage_params)
         storage_params_dict = {'test_battery': storage_params}
 
-        # initialize production devices
+        # initialize production components
         production_params_arr=[]
         production_params = ProductionParams(name='test_pv', max_production=100, efficiency=0.9, energy_dynamics=PVDynamics())
         production_params_arr.append(production_params)
@@ -37,20 +37,20 @@ def default_composite():
         sub_entities.update({name: Battery(params) for name, params in storage_params_dict.items()})
         sub_entities.update({name: PrivateProducer(params) for name, params in production_params_dict.items()})
         # initilaize pcsunit
-        return CompositeNetworkEntity(name="test_composite", sub_entities=sub_entities, agg_func= None)
+        return CompositeGridEntity(name="test_composite", sub_entities=sub_entities, agg_func= None)
 
 
 
 class TestComposite(unittest.TestCase):
     def setUp(self):
-        # Assuming `default_composite` is a function that returns a default CompositeNetworkEntity instance for testing
+        # Assuming `default_composite` is a function that returns a default CompositeGridEntity instance for testing
         self.composite = default_composite()
 
     def test_initialization(self):
-        # Test the initialization of your CompositeNetworkEntity
+        # Test the initialization of your CompositeGridEntity
         self.assertEqual(self.composite.name, "test_composite")
         
-        # # Test the initialization of the CompositeNetworkEntity's devices
+        # # Test the initialization of the CompositeGridEntity's components
 
         self.assertEqual(self.composite.sub_entities['pcsunit_consumption'].lifetime_constant, DEFAULT_LIFETIME_CONSTANT)
         self.assertEqual(self.composite.sub_entities['test_battery'].energy_capacity, 100)
@@ -58,7 +58,7 @@ class TestComposite(unittest.TestCase):
 
 
     def test_get_state(self):
-        # Test the get_current_state method of your CompositeNetworkEntity
+        # Test the get_current_state method of your CompositeGridEntity
         state = self.composite.get_state()
         self.assertEqual(state['pcsunit_consumption']['consumption'], 0.0) 
         self.assertEqual(state['test_battery']['state_of_charge'], 50)
@@ -67,7 +67,7 @@ class TestComposite(unittest.TestCase):
 
 
     def test_step(self):
-        # Test the step method of your CompositeNetworkEntity
+        # Test the step method of your CompositeGridEntity
         cons_act = ConsumeAction(consume=10)
         storage_act = StorageAction(charge=10)
         prod_act = ProduceAction(produce=10)
@@ -90,7 +90,7 @@ class TestComposite(unittest.TestCase):
 
 
     def test_reset(self):
-        # Test the reset method of your CompositeNetworkEntity
+        # Test the reset method of your CompositeGridEntity
         self.composite.reset()
         state = self.composite.get_state()
         self.assertEqual(state['pcsunit_consumption']['consumption'], 0)
@@ -99,7 +99,7 @@ class TestComposite(unittest.TestCase):
 
 
     def test_get_observation_space(self):
-        # Test the get_observation_space method of your CompositeNetworkEntity
+        # Test the get_observation_space method of your CompositeGridEntity
         obs_space = self.composite.get_observation_space()
         cons_low = np.array([0, 0, 0])
         cons_high = np.array([np.inf, np.inf, 1.])
@@ -118,7 +118,7 @@ class TestComposite(unittest.TestCase):
 
 
     def test_get_action_space(self):
-        # Test the get_action_space method of your CompositeNetworkEntity
+        # Test the get_action_space method of your CompositeGridEntity
         action_space = self.composite.get_action_space()
         cons_low = np.array([0])
         cons_high = np.array([np.inf])

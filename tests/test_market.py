@@ -1,15 +1,17 @@
 import warnings
 
 from energy_net.dynamics.production_dynamics.simple_production import SimpleProductionDynamics
-from energy_net.entities.market_entity import MarketRegulatedProducer, MarketStorage
+from energy_net.market_entity import ControlledProducer, MarketStorage
 from energy_net.market.nda_market import NDAMarket
+<<<<<<< HEAD
+from energy_net.ISO import SimpleMarketManager
+=======
 from energy_net.market.market_manager import SimpleMarketManager
 from energy_net.entities.consumers_agg import ConsumersAgg
 from energy_net.entities.simple_production_unit import SimpleProductionUnit
 from energy_net.model.action import EnergyAction, ProduceAction, StorageAction, ConsumeAction
+>>>>>>> 56e876b696ab19dfab192159662e835d3d96a84f
 from energy_net.dynamics.consumption_dynamics.consumption_dynamics import ConsumptionDynamics
-from energy_net.devices.params import ConsumptionParams, ProductionParams
-from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 from energy_net.model.state import State
 from datetime import datetime
 
@@ -25,10 +27,10 @@ def test_market():
 
         # initialize producers
         market_producers_arr=[]
-        production_unit = SimpleProductionUnit(name='_producer1', max_production=100, efficiency=0.9, energy_dynamics=SimpleProductionDynamics(), init_state=init_state)
-        market_producer = MarketRegulatedProducer(name='market'+production_unit.name, network_entity=production_unit)
+        production_unit = Simpleproductionunit(name='_producer1', max_production=100, efficiency=0.9, energy_dynamics=SimpleProductionDynamics(), init_state=init_state)
+        market_producer = ControlledProducer(name='market' + production_unit.name, network_entity=production_unit)
         market_producers_arr.append(market_producer)
-        production_unit = SimpleProductionUnit(name='_producer2', max_production=100, efficiency=0.9, energy_dynamics=SimpleProductionDynamics(), init_state=init_state)
+        production_unit = Simpleproductionunit(name='_producer2', max_production=100, efficiency=0.9, energy_dynamics=SimpleProductionDynamics(), init_state=init_state)
         market_producer = MarketStorage(name='market'+production_unit.name, network_entity=production_unit)
         market_producers_arr.append(market_producer)
 
@@ -57,11 +59,11 @@ def test_market_with_production(demand_list, price_list):
 
         # Initialize producers
         market_producers_arr = []
-        production_unit = SimpleProductionUnit(name='_producer1', max_production=100, efficiency=0.9, energy_dynamics=SimpleProductionDynamics(), init_state=init_state)
-        market_producer = MarketRegulatedProducer(name='market' + production_unit.name, network_entity=production_unit)
+        production_unit = Simpleproductionunit(name='_producer1', max_production=100, efficiency=0.9, energy_dynamics=SimpleProductionDynamics(), init_state=init_state)
+        market_producer = ControlledProducer(name='market' + production_unit.name, network_entity=production_unit)
         market_producers_arr.append(market_producer)
 
-        storage_unit = SimpleProductionUnit(name='_storage1', max_production=100, efficiency=0.9, energy_dynamics=SimpleProductionDynamics(), init_state=init_state)
+        storage_unit = Simpleproductionunit(name='_storage1', max_production=100, efficiency=0.9, energy_dynamics=SimpleProductionDynamics(), init_state=init_state)
         market_storage = MarketStorage(name='market' + storage_unit.name, network_entity=storage_unit)
         market_producers_arr.append(market_storage)
 

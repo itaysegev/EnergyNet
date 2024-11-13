@@ -1,46 +1,35 @@
 from abc import abstractmethod
-from ..model.state import State
-from ..model.action import EnergyAction
-from ..model.reward import Reward
-from ..defs import Bid
-from .network_entity import NetworkEntity
 
-class MarketEntity():
-    def __init__(self, name, network_entity:NetworkEntity):
+from energy_net.components import pcsunit
+from energy_net.model.state import State
+from energy_net.model.action import EnergyAction
+from energy_net.model.reward import Reward
+from energy_net.defs import Bid
+from energy_net.grid_entity import GridEntity
+from energy_net.stratigic_entity import StrategicEntity
+
+
+class MarketEntity(StrategicEntity):
+    def __init__(self, name, network_entity:GridEntity):
         self.name = name
         self.network_entity = network_entity
 
     @abstractmethod
-    def get_bid(self, bid_type:str, state:State, args)-> Bid:
-        pass
-
     def step(self, action: EnergyAction) -> [State,Reward]:
         return self.network_entity.step(action)
 
     def predict(self, action: EnergyAction, state: State) -> [State,Reward]:
         return self.network_entity.predict(action, state)
 
-
-class MarketProducer(MarketEntity):
-
-    def __init__(self, name: str, network_entity:NetworkEntity):
-        super().__init__(name, network_entity=NetworkEntity)
-
-
-class MarketConsumer(MarketEntity):
-
-    def __init__(self, name: str, network_entity:NetworkEntity):
-        super().__init__(name, network_entity=NetworkEntity)
-
-
-class MarketRegulatedProducer(MarketProducer):
+class ControlledProducer(MarketEntity):
     """
     Producer that can only produce electricity.
     """
-    def __init__(self, predicted_demand, predicted_prices, production_capacity=100):
+    def __init__(self, prodcution_unit, predicted_demand, predicted_prices, production_capacity=100):
         self.production_capacity = production_capacity
         self.predicted_demand = predicted_demand
         self.predicted_prices = predicted_prices
+        self.prodcution_unit  = prodcution_unit
 
     def decide_action(self, timestamp):
         # Produce up to the production capacity
@@ -95,4 +84,9 @@ class MarketStorage(MarketEntity):
         else:
             # No action
             return 0
+
+class NonControlledMarketEntity(MarketEntity):
+
+    def __init__(self,PCSUnit:pcsunit):
+        self.pcsunit = pcsunit
 

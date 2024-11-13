@@ -39,7 +39,11 @@ class EnergyDynamics(ABC):
 
     def __init__(self, dynamics_params: Optional[DynamicsParams] = None):
         """
+<<<<<<< HEAD
+        Constructor for the GridEntity class.
+=======
         Initialize the EnergyDynamics instance.
+>>>>>>> 56e876b696ab19dfab192159662e835d3d96a84f
 
         Parameters
         ----------

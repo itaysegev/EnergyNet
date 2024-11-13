@@ -7,7 +7,7 @@ import numpy as np
 class EpisodeTracker:
     """Class for keeping track of current episode time steps for reading observations from data files.
 
-    An EpisodeTracker object is shared amongst the environment and all the devices. 
+    An EpisodeTracker object is shared amongst the environment and all the components.
 
     Parameters
     ----------

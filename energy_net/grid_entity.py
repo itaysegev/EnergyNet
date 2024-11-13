@@ -4,28 +4,26 @@ from collections import OrderedDict
 from typing import Dict, Union, Optional, Any, Callable
 import numpy as np
 
-from ..dynamics.energy_dynamcis import EnergyDynamics
-from ..utils.utils import AggFunc
-from ..model.action import EnergyAction
-from ..model.state import State
-from ..model.reward import Reward
+from energy_net.dynamics.energy_dynamcis import EnergyDynamics
+from energy_net.utils.utils import AggFunc
+from energy_net.model.action import EnergyAction
+from energy_net.model.state import State
+from energy_net.model.reward import Reward
 from energy_net.defs import Bounds
 
 
-class NetworkEntity(ABC):
+class GridEntity:
     """
-    Abstract base class for all network entities. Defines the interface for stepping through actions,
+    Abstract base class for all grid entities. Defines the interface for stepping through actions,
     predicting outcomes, managing state, and handling rewards.
     """
 
     def __init__(self, name: str):
         """
-        Initialize the NetworkEntity.
-
         Parameters
         ----------
         name : str
-            The name of the network entity.
+            The name of the grid entity.
         """
         self.name = name
 
@@ -72,7 +70,7 @@ class NetworkEntity(ABC):
     @abstractmethod
     def get_state(self) -> State:
         """
-        Retrieve the current state of the network entity.
+        Retrieve the current state of the grid entity.
 
         Returns
         -------
@@ -84,7 +82,7 @@ class NetworkEntity(ABC):
     @abstractmethod
     def reset(self) -> None:
         """
-        Reset the network entity to its initial state.
+        Reset the grid entity to its initial state.
         """
         pass
 
@@ -113,19 +111,19 @@ class NetworkEntity(ABC):
         pass
 
 
-class ElementaryNetworkEntity(NetworkEntity):
+class ElementaryGridEntity(GridEntity):
     """
-    Represents a basic network entity with its own state and energy dynamics.
+    Represents a basic grid entity with its own state and energy dynamics.
     """
 
     def __init__(self, name: str, energy_dynamics: EnergyDynamics, init_state: State):
         """
-        Initialize the ElementaryNetworkEntity.
+        Initialize the ElementaryGridEntity.
 
         Parameters
         ----------
         name : str
-            The name of the network entity.
+            The name of the grid entity.
         energy_dynamics : EnergyDynamics
             The energy dynamics governing the entity.
         init_state : State
@@ -243,32 +241,22 @@ class ElementaryNetworkEntity(NetworkEntity):
         return Bounds(low=low, high=high, dtype=float)
 
 
-class CompositeNetworkEntity(NetworkEntity):
-    """
-    Represents a composite network entity composed of multiple sub-entities.
+
+class CompositeGridEntity(GridEntity):
+    """ 
+    This class is a composite grid entity that is composed of other grid entities. It provides an interface for stepping through actions,
+    predicting the outcome of actions, getting the current state, updating the state, and getting the reward.
+    Represents a composite grid entity composed of multiple sub-entities.
     Manages actions and predictions across all sub-entities and aggregates rewards.
     """
-
     def __init__(
         self,
         name: str,
-        sub_entities: Optional[Dict[str, NetworkEntity]] = None,
+        sub_entities: Optional[Dict[str, GridEntity]]= None,
         agg_func: Optional[AggFunc] = None
     ):
-        """
-        Initialize the CompositeNetworkEntity.
-
-        Parameters
-        ----------
-        name : str
-            The name of the composite network entity.
-        sub_entities : Optional[Dict[str, NetworkEntity]], optional
-            A dictionary of sub-entities managed by this composite entity, by default None.
-        agg_func : Optional[AggFunc], optional
-            A function to aggregate rewards from sub-entities, by default None.
-        """
         super().__init__(name)
-        self.sub_entities: Dict[str, NetworkEntity] = OrderedDict(sub_entities) if sub_entities else OrderedDict()
+        self.sub_entities: Dict[str,GridEntity] = OrderedDict(sub_entities) if sub_entities else OrderedDict()
         self.agg_func = agg_func
 
     def step(self, actions: Union[np.ndarray, Dict[str, EnergyAction]], **kwargs: Any) -> None:

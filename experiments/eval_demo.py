@@ -1,23 +1,18 @@
 
 from energy_net.env.single_entity_v0 import gym_env
-from tests.single_agent_config import single_agent_cfgs
 from stable_baselines3 import PPO
-from energy_net.env.EnergyNetEnv import EnergyNetEnv
-from tests.test_network import default_pcsunit
 from energy_net.network import Network
-from energy_net.stratigic_entity import StrategicEntity
-from energy_net.entities.network_entity import CompositeNetworkEntity
-from energy_net.entities.pcsunit import PCSUnit
-from energy_net.devices.params import StorageParams, ProductionParams, ConsumptionParams, DeviceParams
+from energy_net.components.pcsunit import PCSUnit
+from energy_net.components.params import StorageParams, ProductionParams, ConsumptionParams, DeviceParams
 from energy_net.dynamics.consumption_dynamics.consumption_dynamics import GeneralLoad
 from energy_net.dynamics.production_dynamics.production_dynamics import PVDynamics
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
 from energy_net.dynamics.grid_dynamics import GridDynamics
 
-from energy_net.devices.grid_device import GridDevice
-from  energy_net.devices.storage_devices.local_storage import Battery
-from  energy_net.devices.consumption_devices.local_consumer import ConsumerDevice
-from  energy_net.devices.production_devices.local_producer import PrivateProducer
+from energy_net.components.grid_device import GridDevice
+from  energy_net.components.storage_devices.local_storage import Battery
+from  energy_net.components.consumption_devices.local_consumer import ConsumerDevice
+from  energy_net.components.production_devices.local_producer import PrivateProducer
 from energy_net.config import DEFAULT_LIFETIME_CONSTANT
 from energy_net.stratigic_entity import StrategicEntity
 from stable_baselines3.common.env_checker import check_env
@@ -30,7 +25,7 @@ def simulation_reward_function(state, action, new_state):
 
 
 def test_pcsunit():
-    # initialize consumer devices
+    # initialize consumer components
         consumption_params_arr=[]
         file_name = 'test_data.xlsx'
         value_row_name = 'El [MWh]'
@@ -41,13 +36,13 @@ def test_pcsunit():
         consumption_params_arr.append(consumption_params)
         consumption_params_dict = {'pcsunit_consumption': consumption_params}
         
-        # initialize storage devices
+        # initialize storage components
         storage_params_arr=[]
         storage_params = StorageParams(name = 'test_battery', energy_capacity = 4*1e7, power_capacity = 4*1e7,initial_charge = 0, charging_efficiency = 0.9,discharging_efficiency = 0.9, lifetime_constant = 1, energy_dynamics = BatteryDynamics())
         storage_params_arr.append(storage_params)
         storage_params_dict = {'test_battery': storage_params}
 
-        # initialize production devices
+        # initialize production components
         production_params_arr=[]
         value_row_name = 'Epv [MWh]'
 

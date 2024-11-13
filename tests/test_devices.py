@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from energy_net.devices.storage_devices.local_storage import Battery
+from energy_net.components.storage_devices.local_storage import Battery
 
 from energy_net.dynamics.storage_dynamics.storage_dynamics import BatteryDynamics
 

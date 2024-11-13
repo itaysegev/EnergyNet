@@ -1,21 +1,21 @@
-from typing import Any, Union, Mapping
+from typing import Union
 import numpy as np
 
 
-from ..model.action import EnergyAction
+from energy_net.model.action import EnergyAction
 from energy_net.model.state import PcsunitState
-from .network_entity import  CompositeNetworkEntity, NetworkEntity
-from energy_net.devices.storage_devices.local_storage import Battery
+from energy_net.grid_entity import  CompositeGridEntity, GridEntity
+from energy_net.components.storage_devices.local_storage import Battery
 from energy_net.defs import Bounds
 
-from ..utils.utils import AggFunc
+from energy_net.utils.utils import AggFunc
 
-class PCSUnit(CompositeNetworkEntity):
-    """ A network entity that contains a list of sub-entities. The sub-entities are the devices and the pcsunit itself is the composite entity.
+class PCSUnit(CompositeGridEntity):
+    """ A network entity that contains a list of sub-entities. The sub-entities are the components and the pcsunit itself is the composite entity.
     The PCSUnit entity is responsible for managing the sub-entities and aggregating the reward.
     """
 
-    def __init__(self, name: str, sub_entities: dict[str, NetworkEntity] = None, agg_func: AggFunc = None):
+    def __init__(self, name: str, sub_entities: dict[str, GridEntity] = None, agg_func: AggFunc = None):
         super().__init__(name, sub_entities, agg_func)
 
     def step(self, actions: Union[np.ndarray, EnergyAction], **kwargs) -> None:
