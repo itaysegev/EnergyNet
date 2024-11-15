@@ -7,7 +7,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
 
-from energy_net import Agent
+from energy_net.agents.agent import Agent
 
 
 class SACAgent(Agent):
