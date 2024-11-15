@@ -1,8 +1,11 @@
 import numpy as np
 import logging
 from typing import Any, List, Mapping
-from energy_net.defs import Bounds
 
+from energy_net import GridEntity
+from energy_net.agents.agent import Agent
+from energy_net.defs import Bounds
+from energy_net.model.reward import RewardFunction
 
 LOGGER = logging.getLogger()
 
@@ -11,7 +14,6 @@ class StrategicEntity():
     def __init__(self, name, agent: Agent, reward_function: RewardFunction):
         """
                Initializes a StrategicEntity instance.
-
                Args:
                    grid_entity (GridEntity): The associated network entity.
                    agent (Agent): The agent responsible for decision making.
@@ -20,7 +22,6 @@ class StrategicEntity():
         self.agent = agent
         self.reward_function = reward_function
         self.name = name
-        # self.env = agent.env
 
 
 class StrategicGridEntity():
@@ -35,38 +36,16 @@ class StrategicGridEntity():
         Other keyword arguments used to initialize super class.
     """
     
-    def __init__(self, name, grid_entity, agent=None, reward_function=None):
+    def __init__(self, name, agent: Agent, reward_function: RewardFunction, grid_entity:GridEntity):
         """
         Initializes a StrategicEntity instance.
-
         Args:
-            grid_entity (GridEntity): The associated network entity.
-            agent (Agent): The agent responsible for decision making.
+            agent (Agent): The agent responsible for decision-making.
             reward_function (RewardFunction): The reward function to evaluate performance.
+            grid_entity (GridEntity): The associated network entity.
         """
-        super(self.agent = agent
-        self.reward_function = reward_function
-        self.name = name)
-
+        super().__init__(self, name = name, agent= agent, reward_function= reward_function)
         self.grid_entity = grid_entity
-        # self.env = agent.env
-
-
-        # self.observation_space = self.env.get_observation_space()
-        # self.action_space = self.env.get_action_space()
-        # self.episode_time_steps = self.env.get_episode_time_steps()
-        
-        # super().__init__(
-        #     seconds_per_time_step=self.env.seconds_per_time_step,
-        #     random_seed=self.env.random_seed,
-        #     episode_tracker=self.env.episode_tracker,
-        # )
-        # self.reset()
-
-    # @property
-    # def env(self) -> EnergyNetEnv:
-        
-    #     return self.__env
 
     @property
     def observation_names(self) -> List[List[str]]:
