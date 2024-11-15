@@ -284,14 +284,14 @@ def collect_observations(env, model, num_steps=48):
 
 # simulate the environment
 
-# train_network =  Network(name="train_network", strategic_entities=[StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=simulation_reward_function)])
+# train_network =  Network(name="train_network", strategic_entities=[StrategicEntity(name="pcs_agent", grid_entity=default_pcsunit(), reward_function=simulation_reward_function)])
 # env = gym_env(network=train_network, simulation_start_time_step=0,
 #                        simulation_end_time_step=48, episode_time_steps=48,
 #                        seconds_per_time_step=60*30, initial_seed=0)
 
 # simulate the environment
 
-test_network =  Network(name="test_network", strategic_entities=[StrategicEntity(name="pcs_agent", network_entity=test_pcsunit(), reward_function=simulation_reward_function)])
+test_network =  Network(name="test_network", strategic_entities=[StrategicEntity(name="pcs_agent", grid_entity=test_pcsunit(), reward_function=simulation_reward_function)])
     
 test_env = gym_env(network=test_network, simulation_start_time_step=0,
                        simulation_end_time_step=48, episode_time_steps=48,

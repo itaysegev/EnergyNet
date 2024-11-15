@@ -65,7 +65,7 @@ def default_reward_function(state, action, new_state):
 
 def default_network():
     
-    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=default_reward_function)]
+    strategic_entities = [StrategicEntity(name="pcs_agent", grid_entity=default_pcsunit(), reward_function=default_reward_function)]
     return Network(name="test_network", strategic_entities=strategic_entities)
 
 

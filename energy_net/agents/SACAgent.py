@@ -7,10 +7,10 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
 
-from energy_net import NetworkAgent
+from energy_net import Agent
 
 
-class SACAgent(NetworkAgent):
+class SACAgent(Agent):
     """
     Soft Actor-Critic (SAC) agents using Stable Baselines.
     """

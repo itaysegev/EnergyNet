@@ -150,7 +150,7 @@ def collect_observations(env, model, num_steps=48):
 
 
 def create_gym_env(name, network_entity, reward_function, start_time_step=0, end_time_step=48, episode_time_steps=48, seconds_per_time_step=60*30, initial_seed=0):
-    network = Network(name=name, strategic_entities=[StrategicEntity(name="pcs_agent", network_entity=network_entity, reward_function=reward_function)])
+    network = Network(name=name, strategic_entities=[StrategicEntity(name="pcs_agent", grid_entity=network_entity, reward_function=reward_function)])
     env = gym_env(network=network, simulation_start_time_step=start_time_step, simulation_end_time_step=end_time_step, episode_time_steps=episode_time_steps, seconds_per_time_step=seconds_per_time_step, initial_seed=initial_seed)
     return env
 

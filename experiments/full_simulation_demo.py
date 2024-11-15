@@ -31,7 +31,7 @@ def simulation_reward_function(state, action, new_state):
 def main():
     
     for algo in ALGO:
-        strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=simulation_reward_function)]
+        strategic_entities = [StrategicEntity(name="pcs_agent", grid_entity=default_pcsunit(), reward_function=simulation_reward_function)]
         network = Network(name="test_network", strategic_entities=strategic_entities)
 
         env = gym_env(network=network, simulation_start_time_step=0,
@@ -50,7 +50,7 @@ def main():
               save_replay_buffer=True, log_folder="case1_logs", seed=-1, vec_env="dummy", device="auto", n_trials=500, max_total_trials=None,
               optimize_hyperparameters=False, no_optim_plots=False, n_jobs=1, sampler="tpe", pruner="median", n_startup_trials=10)
         
-        strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=simulation_reward_function)]
+        strategic_entities = [StrategicEntity(name="pcs_agent", grid_entity=default_pcsunit(), reward_function=simulation_reward_function)]
         network = Network(name="test_network", strategic_entities=strategic_entities)
 
         env = gym_env(network=network, simulation_start_time_step=0,
@@ -62,7 +62,7 @@ def main():
               save_replay_buffer=True, log_folder="case2_logs", seed=-1, vec_env="dummy", device="auto", n_trials=500, max_total_trials=None,
               optimize_hyperparameters=False, no_optim_plots=False, n_jobs=1, sampler="tpe", pruner="median", n_startup_trials=10)
         
-        # strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=losses_simulation_reward_function)]
+        # strategic_entities = [StrategicEntity(name="pcs_agent", grid_entity=default_pcsunit(), reward_function=losses_simulation_reward_function)]
         # network = Network(name="test_network", strategic_entities=strategic_entities)
 
         # env = gym_env(network=network, simulation_start_time_step=0,

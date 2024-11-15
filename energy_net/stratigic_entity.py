@@ -1,15 +1,29 @@
 import numpy as np
 import logging
-
 from typing import Any, List, Mapping
-from energy_net.env.base import Environment
 from energy_net.defs import Bounds
 
 
 LOGGER = logging.getLogger()
 
+class StrategicEntity():
 
-class StrategicEntity(Environment):
+    def __init__(self, name, agent: Agent, reward_function: RewardFunction):
+        """
+               Initializes a StrategicEntity instance.
+
+               Args:
+                   grid_entity (GridEntity): The associated network entity.
+                   agent (Agent): The agent responsible for decision making.
+                   reward_function (RewardFunction): The reward function to evaluate performance.
+               """
+        self.agent = agent
+        self.reward_function = reward_function
+        self.name = name
+        # self.env = agent.env
+
+
+class StrategicGridEntity():
     """Base agent class.
 
     Parameters
@@ -21,19 +35,20 @@ class StrategicEntity(Environment):
         Other keyword arguments used to initialize super class.
     """
     
-    def __init__(self, name, network_entity, agent=None, reward_function=None):
+    def __init__(self, name, grid_entity, agent=None, reward_function=None):
         """
         Initializes a StrategicEntity instance.
 
         Args:
-            network_entity (GridEntity): The associated network entity.
+            grid_entity (GridEntity): The associated network entity.
             agent (Agent): The agent responsible for decision making.
             reward_function (RewardFunction): The reward function to evaluate performance.
         """
-        self.network_entity = network_entity
-        self.agent = agent
+        super(self.agent = agent
         self.reward_function = reward_function
-        self.name = name
+        self.name = name)
+
+        self.grid_entity = grid_entity
         # self.env = agent.env
 
 
