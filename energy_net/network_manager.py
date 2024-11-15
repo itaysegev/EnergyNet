@@ -1,3 +1,4 @@
+from energy_net.market_entity import MarketEntity
 from energy_net.model.state import State
 
 

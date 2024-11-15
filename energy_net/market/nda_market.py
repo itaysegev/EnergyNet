@@ -76,3 +76,8 @@ class NDAMarket():
         return workloads, price
 
 
+
+    def step(self, cur_state:State):
+        market_results = self.market.step(cur_state)
+        return market_results
+

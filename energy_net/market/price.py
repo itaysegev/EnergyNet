@@ -1,5 +1,7 @@
+from abc import ABC
 
-abstract class Price():
+
+class Price(ABC):
     def __init__(self):
         pass
 
