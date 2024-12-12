@@ -4,7 +4,7 @@ from energy_net.dynamics.production_dynamics.simple_production import SimpleProd
 from energy_net.market_entity import ControlledProducer, MarketStorage
 from energy_net.market.nda_market import NDAMarket
 <<<<<<< HEAD
-from energy_net.ISO import SimpleMarketManager
+from energy_net.network_manager import SimpleMarketManager
 =======
 from energy_net.market.market_manager import SimpleMarketManager
 from energy_net.entities.consumers_agg import ConsumersAgg

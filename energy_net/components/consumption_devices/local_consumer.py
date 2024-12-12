@@ -2,7 +2,7 @@ import numpy as np
 from typing import Any
 
 from ...defs import Bounds
-from ..device import Device
+from ..components.device import Device
 from ...model.state import ConsumptionState
 from ...model.action import ConsumeAction
 from ...config import (

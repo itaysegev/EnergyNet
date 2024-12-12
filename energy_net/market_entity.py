@@ -10,9 +10,9 @@ from energy_net.stratigic_entity import StrategicEntity
 
 
 class MarketEntity(StrategicEntity):
-    def __init__(self, name, network_entity:GridEntity):
+    def __init__(self, name, grid_entity:GridEntity):
         self.name = name
-        self.network_entity = network_entity
+        self.network_entity = grid_entity
 
     @abstractmethod
     def step(self, action: EnergyAction) -> [State,Reward]:

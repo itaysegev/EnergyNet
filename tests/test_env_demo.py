@@ -86,7 +86,7 @@ def main():
         os.makedirs(logdir)
 
     # simulate the environment
-    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=default_pcsunit(), reward_function=simulation_reward_function)]
+    strategic_entities = [StrategicEntity(name="pcs_agent", grid_entity=default_pcsunit(), reward_function=simulation_reward_function)]
     network =  Network(name="test_network", strategic_entities=strategic_entities)
     
     env = gym_env(network=network, simulation_start_time_step=0,
@@ -103,7 +103,7 @@ def main():
     
     
     # simulate the environment
-    strategic_entities = [StrategicEntity(name="pcs_agent", network_entity=test_pcsunit(), reward_function=simulation_reward_function)]
+    strategic_entities = [StrategicEntity(name="pcs_agent", grid_entity=test_pcsunit(), reward_function=simulation_reward_function)]
     network =  Network(name="test_network", strategic_entities=strategic_entities)
     
     env = gym_env(network=network, simulation_start_time_step=0,

@@ -18,12 +18,8 @@ from energy_net.defs import Bounds
 np.seterr(divide='ignore', invalid='ignore')
 
 
-<<<<<<< HEAD:energy_net/components/device.py
 class Device(ElementaryGridEntity):
     """Base device class.
-=======
-class Device(ElementaryNetworkEntity):
-    """
     Represents a generic device within the smart grid network.
 
     This abstract base class defines the common attributes and behaviors
@@ -48,7 +44,6 @@ class Device(ElementaryNetworkEntity):
         The lifetime constant representing the device's technical efficiency.
     action_type : Any
         The type of action the device can perform. To be defined in subclasses.
->>>>>>> 56e876b696ab19dfab192159662e835d3d96a84f:energy_net/devices/device.py
     """
 
     def __init__(self, device_params: DeviceParams, init_state: State):
