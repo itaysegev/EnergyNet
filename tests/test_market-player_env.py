@@ -410,13 +410,13 @@ class TestEnergyNetEnv(unittest.TestCase):
         Test that the environment initializes correctly with given configurations.
         """
         # Check initial energy level
-        self.assertEqual(self.env.energy_lvl, self.pcs_unit_config['battery']['model_parameters']['init'])
+        self.assertEqual(self.env.controller.energy_lvl, self.pcs_unit_config['battery']['model_parameters']['init'])
 
         # Check action space bounds
         expected_low = -self.pcs_unit_config['battery']['model_parameters']['discharge_rate_max']
         expected_high = self.pcs_unit_config['battery']['model_parameters']['charge_rate_max']
-        np.testing.assert_array_equal(self.env.action_space.low, np.array([expected_low]))
-        np.testing.assert_array_equal(self.env.action_space.high, np.array([expected_high]))
+        np.testing.assert_array_equal(self.env.controller.action_space.low, np.array([expected_low]))
+        np.testing.assert_array_equal(self.env.controller.action_space.high, np.array([expected_high]))
 
         # Check observation space bounds
         expected_obs_low = np.array([
@@ -431,8 +431,8 @@ class TestEnergyNetEnv(unittest.TestCase):
             np.inf,
             np.inf
         ], dtype=np.float32)
-        np.testing.assert_array_equal(self.env.observation_space.low, expected_obs_low)
-        np.testing.assert_array_equal(self.env.observation_space.high, expected_obs_high)
+        np.testing.assert_array_equal(self.env.controller.observation_space.low, expected_obs_low)
+        np.testing.assert_array_equal(self.env.controller.observation_space.high, expected_obs_high)
 
     def test_reset(self):
         """
@@ -447,17 +447,17 @@ class TestEnergyNetEnv(unittest.TestCase):
         observation, info = self.env.reset()
 
         # Check that energy level is reset
-        self.assertEqual(self.env.energy_lvl, self.pcs_unit_config['battery']['model_parameters']['init'])
+        self.assertEqual(self.env.controller.energy_lvl, self.pcs_unit_config['battery']['model_parameters']['init'])
 
         # Check that step count is reset
-        self.assertEqual(self.env.count, 0)
+        self.assertEqual(self.env.controller.count, 0)
 
         # Check initial observation
         expected_observation = np.array([
             self.pcs_unit_config['battery']['model_parameters']['init'],
             0.0,  # current_time after reset
-            self.env.PCSUnit.get_self_production(),
-            self.env.PCSUnit.get_self_consumption()
+            self.env.controller.PCSUnit.get_self_production(),
+            self.env.controller.PCSUnit.get_self_consumption()
         ], dtype=np.float32)
         np.testing.assert_array_almost_equal(observation, expected_observation, decimal=5)
 
@@ -469,11 +469,11 @@ class TestEnergyNetEnv(unittest.TestCase):
         observation, reward, terminated, truncated, info = self.env.step(action)
 
         # Check that the energy level has increased appropriately
-        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] + action * self.env.PCSUnit.battery.charge_efficiency
-        self.assertAlmostEqual(self.env.energy_lvl, expected_energy, places=5)
+        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] + action * self.env.controller.PCSUnit.battery.charge_efficiency
+        self.assertAlmostEqual(self.env.controller.energy_lvl, expected_energy, places=5)
 
         # Check that the step count has incremented
-        self.assertEqual(self.env.count, 1)
+        self.assertEqual(self.env.controller.count, 1)
 
         # Check that done flags are False
         self.assertFalse(terminated)
@@ -487,11 +487,11 @@ class TestEnergyNetEnv(unittest.TestCase):
         observation, reward, terminated, truncated, info = self.env.step(action)
 
         # Check that the energy level has decreased appropriately
-        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] - abs(action) * self.env.PCSUnit.battery.discharge_efficiency
-        self.assertAlmostEqual(self.env.energy_lvl, expected_energy, places=5)
+        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] - abs(action) * self.env.controller.PCSUnit.battery.discharge_efficiency
+        self.assertAlmostEqual(self.env.controller.energy_lvl, expected_energy, places=5)
 
         # Check that the step count has incremented
-        self.assertEqual(self.env.count, 1)
+        self.assertEqual(self.env.controller.count, 1)
 
         # Check that done flags are False
         self.assertFalse(terminated)
@@ -502,7 +502,7 @@ class TestEnergyNetEnv(unittest.TestCase):
         Test that the environment correctly terminates after reaching max steps.
         """
         # Set max_steps_per_episode to 2 for testing
-        self.env.max_steps_per_episode = 2
+        self.env.controller.max_steps_per_episode = 2
 
         # Perform two steps
         self.env.step(1.0)
@@ -533,16 +533,16 @@ class TestEnergyNetEnv(unittest.TestCase):
         """
         # Mock the ISO's get_pricing_function to return a fixed reward calculation
         mock_pricing_function = MagicMock(return_value=100.0)
-        self.env.ISO.get_pricing_function = MagicMock(return_value=mock_pricing_function)
+        self.env.controller.ISO.get_pricing_function = MagicMock(return_value=mock_pricing_function)
 
         action = 1.0  # Charge
         observation, reward, terminated, truncated, info = self.env.step(action)
 
         # Check that the pricing function was called with correct parameters
-        self.env.ISO.get_pricing_function.assert_called_once()
+        self.env.controller.ISO.get_pricing_function.assert_called_once()
         mock_pricing_function.assert_called_once_with(
-            1.0 + max(0.0, self.env.PCSUnit.get_self_consumption() - self.env.PCSUnit.get_self_production()),
-            0.0 + max(0.0, self.env.PCSUnit.get_self_production() - self.env.PCSUnit.get_self_consumption())
+            1.0 + max(0.0, self.env.controller.PCSUnit.get_self_consumption() - self.env.controller.PCSUnit.get_self_production()),
+            0.0 + max(0.0, self.env.controller.PCSUnit.get_self_production() - self.env.controller.PCSUnit.get_self_consumption())
         )
 
         # Check that reward is as expected
@@ -567,11 +567,11 @@ class TestEnergyNetEnv(unittest.TestCase):
         observation, reward, terminated, truncated, info = self.env.step(action_array)
 
         # Check that the energy level has increased appropriately
-        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] + action_array.item() * self.env.PCSUnit.battery.charge_efficiency
-        self.assertAlmostEqual(self.env.energy_lvl, expected_energy, places=5)
+        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] + action_array.item() * self.env.controller.PCSUnit.battery.charge_efficiency
+        self.assertAlmostEqual(self.env.controller.energy_lvl, expected_energy, places=5)
 
         # Check that the step count has incremented
-        self.assertEqual(self.env.count, 1)
+        self.assertEqual(self.env.controller.count, 1)
 
         # Check that done flags are False
         self.assertFalse(terminated)
@@ -588,17 +588,17 @@ class TestEnergyNetEnv(unittest.TestCase):
         Test stepping the environment with actions at the boundary of the action space.
         """
         # Test maximum charge action
-        max_charge_action = self.env.action_space.high
+        max_charge_action = self.env.controller.action_space.high
         observation, reward, terminated, truncated, info = self.env.step(max_charge_action)
-        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] + max_charge_action.item() * self.env.PCSUnit.battery.charge_efficiency
-        self.assertAlmostEqual(self.env.energy_lvl, expected_energy, places=5)
+        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] + max_charge_action.item() * self.env.controller.PCSUnit.battery.charge_efficiency
+        self.assertAlmostEqual(self.env.controller.energy_lvl, expected_energy, places=5)
 
         # Test maximum discharge action
         self.env.reset()
-        max_discharge_action = self.env.action_space.low
+        max_discharge_action = self.env.controller.action_space.low
         observation, reward, terminated, truncated, info = self.env.step(max_discharge_action)
-        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] - abs(max_discharge_action.item()) * self.env.PCSUnit.battery.discharge_efficiency
-        self.assertAlmostEqual(self.env.energy_lvl, expected_energy, places=5)
+        expected_energy = self.pcs_unit_config['battery']['model_parameters']['init'] - abs(max_discharge_action.item()) * self.env.controller.PCSUnit.battery.discharge_efficiency
+        self.assertAlmostEqual(self.env.controller.energy_lvl, expected_energy, places=5)
         
     def test_gym_api(self):
         
