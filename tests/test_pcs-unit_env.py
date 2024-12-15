@@ -9,7 +9,7 @@ import gymnasium as gym
 from gymnasium import spaces
 
 
-from energy_net.env.single_entity_v0 import MarketPlayerEnv
+from energy_net.env.pcs_unit_v0 import PCSUnitEnv
 from unittest.mock import MagicMock
 
 NUM_SEEDS = 5
@@ -386,7 +386,7 @@ class TestEnergyNetEnv(unittest.TestCase):
         """
         
         # Initialize EnergyNetEnv with mock configurations
-        self.env = MarketPlayerEnv(
+        self.env = PCSUnitEnv(
             render_mode=None,
             env_config_path='configs/environment_config.yaml',
             iso_config_path='configs/iso_config.yaml',
@@ -605,7 +605,7 @@ class TestEnergyNetEnv(unittest.TestCase):
         seed = hash('EnergyNetEnv')
         for _ in range(NUM_SEEDS):
             seed = abs(hash(str(seed)))
-            env = MarketPlayerEnv(
+            env = PCSUnitEnv(
                 render_mode=None,
                 env_config_path='configs/environment_config.yaml',
                 iso_config_path='configs/iso_config.yaml',
