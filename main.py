@@ -72,7 +72,7 @@ def main():
     
     
 def train_and_evaluate_ppo(
-    env_id='MarketPlayerEnv-v0',
+    env_id='PCSUnitEnv-v0',
     total_timesteps=1000,
     eval_episodes=10,
     log_dir='logs/ppo_energy_net_env',
@@ -199,4 +199,4 @@ def train_and_evaluate_ppo(
     
 if __name__ == "__main__":
     main()
-    # train_and_evaluate_ppo()
+    train_and_evaluate_ppo()
