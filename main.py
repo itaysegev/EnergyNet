@@ -19,7 +19,7 @@ def main():
     iso_config_path = 'configs/iso_config.yaml'
     pcs_unit_config_path = 'configs/pcs_unit_config.yaml'
     log_file = 'logs/environment.log'
-    id = 'MarketPlayerEnv-v0'
+    id = 'PCSUnitEnv-v0'
     # Attempt to create the environment using gym.make
     try:
         env = gym.make(
