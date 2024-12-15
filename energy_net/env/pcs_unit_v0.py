@@ -12,7 +12,7 @@ import logging
 
 # from . import energy_net_v0 as __energy_net_v0
 # from .wrappers.single_agent import SingleEntityWrapper as __SingleEntityWrapper
-from energy_net.network import PCSUnitController
+from energy_net.pcsunit_controller import PCSUnitController
 
 # def gym_env(*args, **kwargs):
 #     """
@@ -39,7 +39,7 @@ from energy_net.network import PCSUnitController
 
 
 
-class MarketPlayerEnv(gym.Env):
+class PCSUnitEnv(gym.Env):
     """
     A Gymnasium-compatible environment for simulating an energy network with
     battery storage, production, and consumption capabilities, managed by PCSUnit and ISO objects.

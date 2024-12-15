@@ -10,12 +10,12 @@ class TestEnvironmentRegistration(unittest.TestCase):
         Test that EnergyNetEnv is correctly registered and can be instantiated.
         """
         try:
-            env = gym.make('MarketPlayerEnv-v0')
-            self.assertIsNotNone(env, "Failed to instantiate MarketPlayerEnv-v0.")
-            self.assertEqual(env.spec.id, 'MarketPlayerEnv-v0', "Environment ID does not match.")
+            env = gym.make('PCSUnitEnv-v0')
+            self.assertIsNotNone(env, "Failed to instantiate PCSUnitEnv-v0.")
+            self.assertEqual(env.spec.id, 'PCSUnitEnv-v0', "Environment ID does not match.")
             env.close()
         except Exception as e:
-            self.fail(f"Failed to make MarketPlayerEnv-v0: {e}")
+            self.fail(f"Failed to make PCSUnitEnv-v0: {e}")
 
 if __name__ == '__main__':
     unittest.main()
