@@ -1,2 +1,1 @@
-
-from energy_net.grid_entity import GridEntity
+import energy_net.env

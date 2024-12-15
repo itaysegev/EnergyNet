@@ -3,9 +3,9 @@ from abc import abstractmethod
 from energy_net.components import pcsunit
 from energy_net.model.state import State
 from energy_net.model.action import EnergyAction
-from energy_net.model.reward import Reward
+from energy_net.rewards.base_reward import BaseReward
 from energy_net.defs import Bid
-from energy_net.grid_entity import GridEntity
+from energy_net.components.grid_entity import GridEntity
 from energy_net.stratigic_entity import StrategicEntity
 
 
@@ -15,10 +15,10 @@ class MarketEntity(StrategicEntity):
         self.network_entity = grid_entity
 
     @abstractmethod
-    def step(self, action: EnergyAction) -> [State,Reward]:
+    def step(self, action: EnergyAction) -> [State, BaseReward]:
         return self.network_entity.step(action)
 
-    def predict(self, action: EnergyAction, state: State) -> [State,Reward]:
+    def predict(self, action: EnergyAction, state: State) -> [State, BaseReward]:
         return self.network_entity.predict(action, state)
 
 class ControlledProducer(MarketEntity):
