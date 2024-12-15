@@ -2,15 +2,15 @@ import numpy as np
 import logging
 from typing import Any, List, Mapping
 
-from energy_net import GridEntity
+from energy_net.components.grid_entity import GridEntity
 from energy_net.agents.agent import Agent
 from energy_net.defs import Bounds
-from energy_net.model.reward import RewardFunction
+from energy_net.rewards.base_reward import BaseReward
 
 
 class StrategicEntity():
 
-    def __init__(self, name, agent: Agent, reward_function: RewardFunction):
+    def __init__(self, name, agent: Agent, reward_function: BaseReward):
         """
                Initializes a StrategicEntity instance.
                Args:
@@ -27,7 +27,7 @@ class StrategicGridEntity(StrategicEntity):
     """
     """
     
-    def __init__(self, name, agent: Agent, reward_function: RewardFunction, grid_entity:GridEntity):
+    def __init__(self, name, agent: Agent, reward_function: BaseReward, grid_entity:GridEntity):
         """
         Initializes a StrategicEntity instance.
         Args:

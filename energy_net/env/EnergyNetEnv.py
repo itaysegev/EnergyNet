@@ -17,7 +17,7 @@ from ..network import Network
 from ..utils.env_utils import bounds_to_gym_box, assign_indexes
 
 
-class EnergyNetEnv(Environment, ParallelEnv):
+class EnergyNetEnv(ParallelEnv):
 
     ##################
     # Pettingzoo API #
@@ -27,17 +27,8 @@ class EnergyNetEnv(Environment, ParallelEnv):
 
     def __init__(self,
         network : Network,
-        simulation_start_time_step: int = None, # Time step to start simulation
-        simulation_end_time_step: int = None, 
-        episode_time_steps: int = None, # Number of time steps in an episode
-        seconds_per_time_step: float = None, # Number of seconds in 1 `time_step` and must be set to >= 1.
         initial_seed: int = None, #  Pseudorandom number generator seed for repeatable results.
         **kwargs: Any):
-
-        self.episode_tracker = EpisodeTracker(simulation_start_time_step, simulation_end_time_step)
-        super().__init__(seconds_per_time_step=seconds_per_time_step, random_seed=initial_seed, episode_tracker=self.episode_tracker)
-
-        self.episode_time_steps = episode_time_steps
 
 
         # set random seed if specified
@@ -80,17 +71,6 @@ class EnergyNetEnv(Environment, ParallelEnv):
         self.__state = None
 
     def reset(self, seed=None, return_info=True, options=None):
-        
-        super().reset()
-
-        # update time steps for time series
-        self.episode_tracker.next_episode(
-            self.episode_time_steps,
-            False,
-            False,
-            self.random_seed,
-        )
-
 
         # set seed if given
         if seed is not None:
@@ -167,12 +147,7 @@ class EnergyNetEnv(Environment, ParallelEnv):
         # #TODO: 
         # # Check if the simulation has reached the end
         terms = {a: False for a in self.agents}
-        if self.terminated():
-            terms = {a: True for a in self.agents}
-            self.agents = []
-
-        self.next_time_step()
-
+  
         return obs, rewards, terms, truncs, infos
 
 
@@ -248,26 +223,11 @@ class EnergyNetEnv(Environment, ParallelEnv):
         return {name: bounds_to_gym_box(bound) for name, bound in self.network.get_action_space().items()}
 
 
-    def terminated(self) -> bool:
-        return self.time_step == self.episode_tracker.simulation_end_time_step - self.episode_tracker.simulation_start_time_step - 1
-    
-
     def truncated(self) -> bool:
         """Check if episode truncates due to a time limit or a reason that is not defined as part of the task MDP."""
 
         return False
 
-    @property
-    def time_steps(self) -> int:
-        """Number of time steps in current episode split."""
-        return self.episode_tracker.episode_time_steps
-    
-
-    @property
-    def episode(self) -> int:
-        """Current episode index."""
-
-        return self.episode_tracker.episode
     
     def get_info(self) -> dict:
         return {agent: {} for agent in self.agents}

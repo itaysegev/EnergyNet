@@ -1,92 +1,125 @@
-from typing import Union
-import numpy as np
+# components/pcs_unit.py
 
+from typing import Any, Dict, Optional
 
-from energy_net.model.action import EnergyAction
-from energy_net.model.state import PcsunitState
-from energy_net.grid_entity import  CompositeGridEntity, GridEntity
-from energy_net.components.storage_devices.local_storage import Battery
-from energy_net.defs import Bounds
+from energy_net.components.storage_devices.battery import Battery
+from energy_net.components.production_devices.production_unit import ProductionUnit
+from energy_net.components.consumption_devices.consumption_unit import ConsumptionUnit
+from energy_net.dynamics.energy_dynamcis import EnergyDynamics
 
-from energy_net.utils.utils import AggFunc
+from energy_net.utils.logger import setup_logger  # Import the logger setup
+from energy_net.utils.utils import dict_level_alingment
 
-class PCSUnit(CompositeGridEntity):
-    """ A network entity that contains a list of sub-entities. The sub-entities are the components and the pcsunit itself is the composite entity.
-    The PCSUnit entity is responsible for managing the sub-entities and aggregating the reward.
+class PCSUnit:
+    """
+    Power Conversion System Unit (PCSUnit) managing Battery, ProductionUnit, and ConsumptionUnit.
+
+    This class integrates the battery, production, and consumption components, allowing for
+    coordinated updates and state management within the smart grid simulation.
     """
 
-    def __init__(self, name: str, sub_entities: dict[str, GridEntity] = None, agg_func: AggFunc = None):
-        super().__init__(name, sub_entities, agg_func)
+    def __init__(
+        self,
+        battery_dynamics: EnergyDynamics,
+        production_dynamics: EnergyDynamics,
+        consumption_dynamics: EnergyDynamics,
+        config: Dict[str, Any],
+        log_file: Optional[str] = 'logs/pcs_unit.log'  # Path to the PCSUnit log file
+    ):
+        """
+        Initializes the PCSUnit with its components and configuration.
 
-    def step(self, actions: Union[np.ndarray, EnergyAction], **kwargs) -> None:
-        if isinstance(actions, np.ndarray):
-            for entity in self.sub_entities.values():
-                entity.step(actions)
-        else:
-            raise NotImplementedError
-        
-        
-    def predict(self, actions: Union[np.ndarray, dict[str, EnergyAction]]):
+        Args:
+            battery_dynamics (EnergyDynamics): Dynamics defining the battery's behavior.
+            production_dynamics (EnergyDynamics): Dynamics defining the production unit's behavior.
+            consumption_dynamics (EnergyDynamics): Dynamics defining the consumption unit's behavior.
+            config (Dict[str, Any]): Configuration parameters for the PCSUnit components.
+            log_file (str, optional): Path to the PCSUnit log file.
+        """
+        # Set up logger
+        self.logger = setup_logger('PCSUnit', log_file)
+        self.logger.info("Initializing PCSUnit.")
 
-        predicted_states = {}
-        if type(actions) is np.ndarray:
-            # we convert the entity dict to a list and match action to entities by index
-            sub_entities = list(self.sub_entities.values())
-            for entity_index, action in enumerate(actions):
-                if hasattr(type(sub_entities[entity_index]), 'predict'):
-                    predicted_states[sub_entities[entity_index].name] = sub_entities[entity_index].predict(
-                    np.array([action]))
+        # Initialize Battery
+        self.battery = Battery(dynamics=battery_dynamics, config=dict_level_alingment(config, 'battery', 'model_parameters'))
+        self.logger.info(f"Initialized Battery with energy level: {self.battery.energy_level} MWh")
 
-        else:
-            for entity_name, action in actions.items():
-                if hasattr(type(self.sub_entities[entity_name]), 'predict'):
-                    predicted_states[entity_name] = self.sub_entities[entity_name].predict(action)
+        # Initialize ProductionUnit
+        self.production_unit = ProductionUnit(dynamics=production_dynamics, config=dict_level_alingment(config, 'production_unit', 'model_parameters'))
+        self.logger.info(f"Initialized ProductionUnit with current production: {self.production_unit.get_state()} MWh")
 
-        if self.agg_func:
-            agg_value = self.agg_func(predicted_states)
-            return agg_value
-        else:
-            return predicted_states
+        # Initialize ConsumptionUnit
+        self.consumption_unit = ConsumptionUnit(dynamics=consumption_dynamics, config=dict_level_alingment(config, 'consumption_unit', 'model_parameters'))
+        self.logger.info(f"Initialized ConsumptionUnit with current consumption: {self.consumption_unit.get_state()} MWh")
+
+    def reset(self) -> None:
+        """
+        Resets all components to their initial states.
+        """
+        self.logger.info("Resetting PCSUnit components.")
+        # Reset Battery
+        self.battery.reset()
+        self.logger.debug(f"Battery reset to energy level: {self.battery.energy_level} MWh")
+
+        # Reset ProductionUnit
+        self.production_unit.reset()
+        self.logger.debug(f"ProductionUnit reset to production: {self.production_unit.get_state()} MWh")
+
+        # Reset ConsumptionUnit
+        self.consumption_unit.reset()
+        self.logger.debug(f"ConsumptionUnit reset to consumption: {self.consumption_unit.get_state()} MWh")
+
+    def update(self, time: float, battery_action: float) -> None:
+        """
+        Updates the state of all components based on the current time and battery action.
+
+        Args:
+            time (float): Current time as a fraction of the day (0 to 1).
+            battery_action (float): Charging (+) or discharging (-) power (MW).
+        """
+        self.logger.info(f"Updating PCSUnit at time: {time}, with battery_action: {battery_action} MW")
+
+        # Update Battery with the action
+        self.battery.update(time=time, action=battery_action)
+        self.logger.debug(f"Battery updated to energy level: {self.battery.get_state()} MWh")
         
-    def get_observation_space(self) -> dict[str, Bounds]:
-        obs_space = {}
-        first_entity = True
-        for name, entity in self.sub_entities.items():
-            obs_space[name] = entity.get_observation_space()
-            if first_entity:
-                first_entity = False
-            elif isinstance(entity, Battery):
-                # Remove the time dimension from the observation space due to duplicates
-                obs_space[name].remove_first_dim()
-            else:
-                obs_space[name].remove_first_dim()
-                obs_space[name].remove_first_dim()
-            
-        return obs_space
-        
-    def get_action_space(self) -> dict[str, Bounds]:
-        action_space = {}
-        for name, entity in self.sub_entities.items():
-            if isinstance(entity, Battery):
-                action_space[name] = entity.get_action_space()
-            
-        return action_space
+
+        # Update ProductionUnit (no action required)
+        self.production_unit.update(time=time, action=0.0)
+        self.logger.debug(f"ProductionUnit updated to production: {self.production_unit.get_state()} MWh")
+
+        # Update ConsumptionUnit (no action required)
+        self.consumption_unit.update(time=time, action=0.0)
+        self.logger.debug(f"ConsumptionUnit updated to consumption: {self.consumption_unit.get_state()} MWh")
+
+    def get_self_production(self) -> float:
+        """
+        Retrieves the current self-production value.
+
+        Returns:
+            float: Current production in MWh.
+        """
+        production = self.production_unit.get_state()
+        self.logger.debug(f"Retrieved self-production: {production} MWh")
+        return production
+
+    def get_self_consumption(self) -> float:
+        """
+        Retrieves the current self-consumption value.
+
+        Returns:
+            float: Current consumption in MWh.
+        """
+        consumption = self.consumption_unit.get_state()
+        self.logger.debug(f"Retrieved self-consumption: {consumption} MWh")
+        return consumption
     
-    def get_state(self, numpy_arr = False) -> dict[str, PcsunitState]:
-        states = {}
-        for entity in self.sub_entities.values():
-            states[entity.name] = entity.get_state()
-        
-        state = PcsunitState(states)
-        
-        if numpy_arr:
-            return state.to_numpy()
-            
-        return state
+    def get_energy_change(self) -> float:
+        """
+        Retrieves the energy change in the battery.
 
-
-
-
-
-
-
+        Returns:
+            float: Energy change in MWh.
+        """
+        self.logger.debug(f"Retrieving energy change: {self.battery.energy_change} MWh")
+        return self.battery.energy_change
