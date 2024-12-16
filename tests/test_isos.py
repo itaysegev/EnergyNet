@@ -2,11 +2,11 @@
 
 import unittest
 
-from energy_net.iso.hourly_pricing_iso import HourlyPricingISO
-from energy_net.iso.random_pricing_iso import RandomPricingISO
-from energy_net.iso.quadratic_pricing_iso import QuadraticPricingISO
-from energy_net.iso.time_of_use_pricing_iso import TimeOfUsePricingISO
-from energy_net.iso.dynamic_pricing_iso import DynamicPricingISO
+from energy_net.dynamics.iso.hourly_pricing_iso import HourlyPricingISO
+from energy_net.dynamics.iso.random_pricing_iso import RandomPricingISO
+from energy_net.dynamics.iso.quadratic_pricing_iso import QuadraticPricingISO
+from energy_net.dynamics.iso.time_of_use_pricing_iso import TimeOfUsePricingISO
+from energy_net.dynamics.iso.dynamic_pricing_iso import DynamicPricingISO
 
 
 class TestHourlyPricingISO(unittest.TestCase):
