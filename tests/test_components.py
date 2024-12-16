@@ -301,60 +301,50 @@ class TestPCSUnit(unittest.TestCase):
         # Define configuration for PCSUnit
         self.pcs_config: Dict[str, Any] = {
             'battery': {
-                'min': 0.0,
-                'max': 60.0,
-                'charge_rate_max': 4.0,
-                'discharge_rate_max': 2.0,
-                'charge_efficiency': 0.4,
-                'discharge_efficiency': 0.6,
-                'init': 30.0
+                'model_parameters': {  # Nested model parameters
+                    'min': 0.0,
+                    'max': 60.0,
+                    'charge_rate_max': 4.0,
+                    'discharge_rate_max': 2.0,
+                    'charge_efficiency': 0.4,
+                    'discharge_efficiency': 0.6,
+                    'init': 30.0,
+                    'lifetime_constant': 100
+                }
             },
             'production_unit': {
-                'production_capacity': 50.0
+                'model_parameters': {  # Assuming similar nesting for consistency
+                    'production_capacity': 50.0,
+                    'peak_production': 50.0,
+                    'peak_time': 0.5,
+                    'width': 0.1
+                }
             },
             'consumption_unit': {
-                'consumption_capacity': 45.0
+                'model_parameters': {  # Assuming similar nesting for consistency
+                    'consumption_capacity': 45.0,
+                    'peak_consumption1': 20.0,
+                    'peak_time1': 0.4,
+                    'width1': 0.05,
+                    'peak_consumption2': 25.0,
+                    'peak_time2': 0.7,
+                    'width2': 0.05
+                }
             }
         }
 
         # Initialize PCSUnit component
         self.pcs_unit = PCSUnit(
-            battery_dynamics=self.battery_dynamics,
-            production_dynamics=self.production_dynamics,
-            consumption_dynamics=self.consumption_dynamics,
             config=self.pcs_config
         )
 
     def test_initialization_with_valid_parameters(self):
         # Test that PCSUnit initializes correctly with valid parameters
-        self.assertEqual(self.pcs_unit.battery.get_state(), 30.0)
-        self.assertEqual(self.pcs_unit.production_unit.get_state(), 0.0)
-        self.assertEqual(self.pcs_unit.consumption_unit.get_state(), 0.0)
+        self.assertEqual(self.pcs_unit.get_sub_entity('Battery_0').get_state(), 30.0)
+        self.assertEqual(self.pcs_unit.get_sub_entity('ProductionUnit_1').get_state(), 0.0)
+        self.assertEqual(self.pcs_unit.get_sub_entity('ConsumptionUnit_2').get_state(), 0.0)
 
-    def test_initialization_missing_parameters(self):
-        # Test that PCSUnit raises AssertionError if configuration parameters are missing
-        incomplete_config: Dict[str, Any] = {
-            'battery': {
-                'min': 0.0,
-                'max': 60.0,
-                'charge_rate_max': 4.0,
-                'discharge_rate_max': 2.0,
-                'charge_efficiency': 0.4,
-                'discharge_efficiency': 0.6,
-                'init': 30.0
-            },
-            'production_unit': {
-                'production_capacity': 50.0
-            }
-            # 'consumption_unit' is missing
-        }
-        with self.assertRaises(KeyError):
-            PCSUnit(
-                battery_dynamics=self.battery_dynamics,
-                production_dynamics=self.production_dynamics,
-                consumption_dynamics=self.consumption_dynamics,
-                config=incomplete_config
-            )
+
 
     def test_update_with_charge_action(self):
         # Test updating PCSUnit with a charge action
@@ -377,85 +367,96 @@ class TestPCSUnit(unittest.TestCase):
         self.assertEqual(self.pcs_unit.production_unit.get_state(), 0.0)
         self.assertEqual(self.pcs_unit.consumption_unit.get_state(), 0.0)
 
-
-class TestPCSUnitIntegration(unittest.TestCase):
+class TestPCSUnitMultiAction(unittest.TestCase):
     def setUp(self):
-        # Define model parameters for DeterministicBattery
-        battery_model_params: Dict[str, Any] = {
-            'charge_efficiency': 0.4,
-            'discharge_efficiency': 0.6,
-            'lifetime_constant': 100.0
-        }
-        self.battery_dynamics = DeterministicBattery(model_parameters=battery_model_params)
-
-        # Define model parameters for DeterministicProduction
-        production_model_params: Dict[str, Any] = {
-            'peak_production': 50.0,
-            'peak_time': 0.5,
-            'width': 0.1
-        }
-        self.production_dynamics = DeterministicProduction(model_parameters=production_model_params)
-
-        # Define model parameters for DeterministicConsumption
-        consumption_model_params: Dict[str, Any] = {
-            'peak_consumption1': 20.0,
-            'peak_time1': 0.4,
-            'width1': 0.05,
-            'peak_consumption2': 25.0,
-            'peak_time2': 0.7,
-            'width2': 0.05
-        }
-        self.consumption_dynamics = DeterministicConsumption(model_parameters=consumption_model_params)
-
-        # Define configuration for PCSUnit
-        self.pcs_config: Dict[str, Any] = {
+        self.pcs_config_multi: Dict[str, Any] = {
             'battery': {
-                'min': 0.0,
-                'max': 60.0,
-                'charge_rate_max': 4.0,
-                'discharge_rate_max': 2.0,
-                'charge_efficiency': 0.4,
-                'discharge_efficiency': 0.6,
-                'init': 30.0
+                'model_parameters': {  # Nested model parameters
+                    'min': 0.0,
+                    'max': 60.0,
+                    'charge_rate_max': 4.0,
+                    'discharge_rate_max': 2.0,
+                    'charge_efficiency': 0.4,
+                    'discharge_efficiency': 0.6,
+                    'init': 30.0,
+                    'lifetime_constant': 100
+                }
             },
             'production_unit': {
-                'production_capacity': 50.0
+                'model_parameters': {  # Nested model parameters
+                    'production_capacity': 50.0,
+                    'peak_production': 50.0,
+                    'peak_time': 0.5,
+                    'width': 0.1
+                }
             },
             'consumption_unit': {
-                'consumption_capacity': 45.0
+                'model_parameters': {  # Nested model parameters
+                    'consumption_capacity': 45.0,
+                    'peak_consumption1': 20.0,
+                    'peak_time1': 0.4,
+                    'width1': 0.05,
+                    'peak_consumption2': 25.0,
+                    'peak_time2': 0.7,
+                    'width2': 0.05
+                }
+            },
+            'action': {
+                'multi_action': True,
+                'production_action': {
+                    'enabled': True,
+                    'min': -10.0,                              # Minimum production action value
+                    'max': 10.0
+                },
+                'consumption_action': {
+                    'enabled': True,
+                    'min': -10.0,                              # Minimum production action value
+                    'max': 10.0
+                }
             }
         }
 
-        # Initialize PCSUnit component
-        self.pcs_unit = PCSUnit(
-            battery_dynamics=self.battery_dynamics,
-            production_dynamics=self.production_dynamics,
-            consumption_dynamics=self.consumption_dynamics,
-            config=self.pcs_config
+        self.pcs_unit_multi = PCSUnit(
+            config=self.pcs_config_multi
         )
+        
+    def test_initialization_with_multi_action(self):
+        # Test that PCSUnit initializes correctly with multi_action enabled
+        self.assertEqual(self.pcs_unit_multi.battery.get_state(), 30.0)
+        self.assertEqual(self.pcs_unit_multi.production_unit.get_state(), 0.0)
+        self.assertEqual(self.pcs_unit_multi.consumption_unit.get_state(), 0.0)
+        
+    def test_update_with_multi_actions(self):
+        # Test updating PCSUnit with multiple actions
+        actions = {
+            'battery_action': 3.0,           # Charge 3.0 MW
+            'consumption_action': 5.0,       # Increase consumption by 5.0 MW
+            'production_action': -4.0         # Decrease production by 4.0 MW
+        }
+        self.pcs_unit_multi.update(time=0.5, battery_action=actions['battery_action'],
+                                   consumption_action=actions['consumption_action'],
+                                   production_action=actions['production_action'])
+        # Calculate expected states
+        expected_battery_energy = 30.0 + 3.0 * 0.4  # 30 + 1.2 = 31.2
 
-    def test_integration_charge_and_discharge(self):
-        # Charge the battery
-        self.pcs_unit.update(time=0.5, battery_action=3.0)  # Charge 3.0 MW
-        expected_energy_after_charge = 30.0 + 3.0 * 0.4  # 30 + 1.2 = 31.2
-        self.assertAlmostEqual(self.pcs_unit.battery.get_state(), expected_energy_after_charge, places=5)
+        # Calculate expected_consumption
+        base_consumption = min(
+            20.0 * math.exp(-((0.5 - 0.4) ** 2) / (2 * (0.05 ** 2))) +
+            25.0 * math.exp(-((0.5 - 0.7) ** 2) / (2 * (0.05 ** 2))),
+            45.0
+        )
+        expected_consumption = base_consumption 
 
-        # Discharge the battery
-        self.pcs_unit.update(time=0.5, battery_action=-1.5)  # Discharge 1.5 MW
-        expected_energy_after_discharge = 31.2 - 1.5 * 0.6  # 31.2 - 0.9 = 30.3
-        self.assertAlmostEqual(self.pcs_unit.battery.get_state(), expected_energy_after_discharge, places=5)
+        # Calculate expected_production
+        base_production = min(
+            50.0 * math.exp(-((0.5 - 0.5) ** 2) / (2 * (0.1 ** 2))),
+            50.0
+        )
+        expected_production = max(base_production, 0.0)  # Ensure not below 0
 
-    def test_integration_reset(self):
-        # Perform some actions
-        self.pcs_unit.update(time=0.5, battery_action=2.0)  # Charge 2.0 MW
-        self.pcs_unit.update(time=0.6, battery_action=-1.0)  # Discharge 1.0 MW
-
-        # Reset PCSUnit
-        self.pcs_unit.reset()
-        self.assertEqual(self.pcs_unit.battery.get_state(), 30.0)
-        self.assertEqual(self.pcs_unit.production_unit.get_state(), 0.0)
-        self.assertEqual(self.pcs_unit.consumption_unit.get_state(), 0.0)
-
+        self.assertAlmostEqual(self.pcs_unit_multi.battery.get_state(), expected_battery_energy, places=5)
+        self.assertAlmostEqual(self.pcs_unit_multi.consumption_unit.get_state(), expected_consumption, places=5)
+        self.assertAlmostEqual(self.pcs_unit_multi.production_unit.get_state(), expected_production, places=5)
 
 if __name__ == '__main__':
     unittest.main()

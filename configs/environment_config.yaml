@@ -2,6 +2,7 @@
 
 # Time Parameters
 time:
+  time_steps_per_day_ratio: 1440
   step_duration: 5     # Time step duration (minutes)
   max_steps_per_episode: 864 # Steps per episode (3 days)
 

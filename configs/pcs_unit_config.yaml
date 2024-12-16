@@ -33,3 +33,15 @@ consumption_unit:
     peak_consumption2: 25.0                 # Second peak consumption (MWh)
     peak_time2: 0.7                          # Second peak in the evening (fraction of day)
     width2: 0.05                             # Width of the second peak
+
+
+action:
+  multi_action: false                       # Flag to enable/disable additional actions
+  production_action:
+    enabled: false
+    min: -10.0                              # Minimum production action value
+    max: 10.0                               # Maximum production action value
+  consumption_action:
+    enabled: false
+    min: -10.0                              # Minimum consumption action value
+    max: 10.0                               # Maximum consumption action value

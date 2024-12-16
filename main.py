@@ -31,7 +31,7 @@ def main():
             log_file=log_file
         )
     except gym.error.UnregisteredEnv:
-        print("Error: The environment 'MarketPlayerEnv-v0' is not registered. Please check your registration.")
+        print("Error: The environment 'PCSUnitEnv-v0' is not registered. Please check your registration.")
         return
     except Exception as e:
         print(f"An unexpected error occurred while creating the environment: {e}")
@@ -43,7 +43,7 @@ def main():
     done = False
     truncated = False
 
-    print("Starting MarketPlayer Simulation...")
+    print("Starting PCSUnitEnv Simulation...")
 
     while not done and not truncated:
         # Sample a random action from the action space
@@ -199,4 +199,4 @@ def train_and_evaluate_ppo(
     
 if __name__ == "__main__":
     main()
-    train_and_evaluate_ppo()
+    # train_and_evaluate_ppo()

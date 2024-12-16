@@ -25,13 +25,12 @@ from energy_net.rewards.cost_reward import CostReward
 
 class PCSUnitController():
     """
-    A Gymnasium-compatible environment for simulating an energy network with
-    battery storage, production, and consumption capabilities, managed by PCSUnit and ISO objects.
-
     Actions:
-        Type: Box(1)
-        Action                              Min                     Max
-        Charging/Discharging Power           -max discharge rate     max charge rate
+        Type: Box
+            - If multi_action=False:
+                Charging/Discharging Power: continuous scalar
+            - If multi_action=True:
+                [Charging/Discharging Power, Consumption Action, Production Action]
 
     Observation:
         Type: Box(4)
@@ -62,7 +61,8 @@ class PCSUnitController():
             log_file: Path to the log file for environment logging.
             reward_type: Type of reward function to use.
         """
-        
+        super().__init__()  # Initialize the parent class
+
         # Set up logger
         self.logger = setup_logger('EnergyNetEnv', log_file)
         self.logger.info("Initializing EnergyNetEnv.")
@@ -77,82 +77,62 @@ class PCSUnitController():
         iso_parameters: Dict[str, Any] = self.iso_config.get('parameters', {})
         self.ISO = iso_factory(iso_type, iso_parameters)
         self.logger.info(f"Initialized ISO with type: {iso_type} and parameters: {iso_parameters}")
-
-        # Initialize Energy Dynamics for PCSUnit components
-        # Dynamically choose the type of dynamics based on configuration
-        battery_dynamic_type: str = self.pcs_unit_config.get('battery', {}).get('dynamic_type', 'model_based')
-        production_dynamic_type: str = self.pcs_unit_config.get('production_unit', {}).get('dynamic_type', 'model_based')
-        consumption_dynamic_type: str = self.pcs_unit_config.get('consumption_unit', {}).get('dynamic_type', 'model_based')
-
-        # Initialize Battery Dynamics
-        if battery_dynamic_type == 'model_based':
-            battery_model_type: str = self.pcs_unit_config.get('battery', {}).get('model_type', 'default')
-            if battery_model_type == 'deterministic_battery':
-                battery_model_params: Dict[str, Any] = self.pcs_unit_config.get('battery', {}).get('model_parameters', {})
-                battery_dynamics: EnergyDynamics = DeterministicBattery(model_parameters=battery_model_params)
-                self.logger.info(f"Initialized Battery with DeterministicBattery dynamics: {battery_model_params}")
-            else:
-                raise ValueError(f"Unknown battery model type: {battery_model_type}")
-        elif battery_dynamic_type == 'data_driven':
-            battery_data_file: str = self.pcs_unit_config.get('battery', {}).get('data_file', 'battery_data.csv')
-            battery_value_column: str = self.pcs_unit_config.get('battery', {}).get('value_column', 'battery_value')
-            battery_dynamics = DataDrivenDynamics(data_file=battery_data_file, value_column=battery_value_column)
-            self.logger.info(f"Initialized Battery with DataDrivenDynamics from file: {battery_data_file}")
-        else:
-            raise ValueError(f"Unknown battery dynamic type: {battery_dynamic_type}")
-
-        # Initialize ProductionUnit Dynamics
-        if production_dynamic_type == 'model_based':
-            production_model_type: str = self.pcs_unit_config.get('production_unit', {}).get('model_type', 'default')
-            if production_model_type == 'deterministic_production':
-                production_model_params: Dict[str, Any] = self.pcs_unit_config.get('production_unit', {}).get('model_parameters', {})
-                production_dynamics: EnergyDynamics = DeterministicProduction(model_parameters=production_model_params)
-                self.logger.info(f"Initialized ProductionUnit with DeterministicProduction dynamics: {production_model_params}")
-            else:
-                raise ValueError(f"Unknown production_unit model type: {production_model_type}")
-        elif production_dynamic_type == 'data_driven':
-            production_data_file: str = self.pcs_unit_config.get('production_unit', {}).get('data_file', 'production_data.csv')
-            production_value_column: str = self.pcs_unit_config.get('production_unit', {}).get('value_column', 'production_value')
-            production_dynamics = DataDrivenDynamics(data_file=production_data_file, value_column=production_value_column)
-            self.logger.info(f"Initialized ProductionUnit with DataDrivenDynamics from file: {production_data_file}")
-        else:
-            raise ValueError(f"Unknown production_unit dynamic type: {production_dynamic_type}")
-
-        # Initialize ConsumptionUnit Dynamics
-        if consumption_dynamic_type == 'model_based':
-            consumption_model_type: str = self.pcs_unit_config.get('consumption_unit', {}).get('model_type', 'default')
-            if consumption_model_type == 'deterministic_consumption':
-                consumption_model_params: Dict[str, Any] = self.pcs_unit_config.get('consumption_unit', {}).get('model_parameters', {})
-                consumption_dynamics: EnergyDynamics = DeterministicConsumption(model_parameters=consumption_model_params)
-                self.logger.info(f"Initialized ConsumptionUnit with DeterministicConsumption dynamics: {consumption_model_params}")
-            else:
-                raise ValueError(f"Unknown consumption_unit model type: {consumption_model_type}")
-        elif consumption_dynamic_type == 'data_driven':
-            consumption_data_file: str = self.pcs_unit_config.get('consumption_unit', {}).get('data_file', 'consumption_data.csv')
-            consumption_value_column: str = self.pcs_unit_config.get('consumption_unit', {}).get('value_column', 'consumption_value')
-            consumption_dynamics = DataDrivenDynamics(data_file=consumption_data_file, value_column=consumption_value_column)
-            self.logger.info(f"Initialized ConsumptionUnit with DataDrivenDynamics from file: {consumption_data_file}")
-        else:
-            raise ValueError(f"Unknown consumption_unit dynamic type: {consumption_dynamic_type}")
-
+        
         # Initialize PCSUnit with dynamics and configuration
         self.PCSUnit: PCSUnit = PCSUnit(
-            battery_dynamics=battery_dynamics,
-            production_dynamics=production_dynamics,
-            consumption_dynamics=consumption_dynamics,
-            config=self.pcs_unit_config
+            config=self.pcs_unit_config,
+            log_file=log_file
         )
+        
         self.logger.info("Initialized PCSUnit with all components.")
 
         # Define Action Space
         energy_config: Dict[str, Any] = self.pcs_unit_config['battery']['model_parameters']
-        self.action_space: spaces.Box = spaces.Box(
-            low=-energy_config['discharge_rate_max'], # specifies the maximum rate at which energy can be discharged from the energy storage system per unit time in the environment.
-            high=energy_config['charge_rate_max'], # specifies the maximum rate at which energy can be charged into the energy storage system per unit time in the environment.
-            shape=(1,),
-            dtype=np.float32
-        )
-        self.logger.info(f"Defined action space: low={-energy_config['discharge_rate_max']}, high={energy_config['charge_rate_max']}")
+        
+        
+        # Load action configurations
+        self.multi_action: bool = self.pcs_unit_config.get('action', {}).get('multi_action', False)
+        self.production_action_enabled: bool = self.pcs_unit_config.get('action', {}).get('production_action', {}).get('enabled', False)
+        self.consumption_action_enabled: bool = self.pcs_unit_config.get('action', {}).get('consumption_action', {}).get('enabled', False)
+
+        
+        if self.multi_action:
+            # Load production action limits
+            self.production_action_min: float = self.pcs_unit_config.get('action', {}).get('production_action', {}).get('min')
+            self.production_action_max: float = self.pcs_unit_config.get('action', {}).get('production_action', {}).get('max')
+            
+            # Load consumption action limits
+            self.consumption_action_min: float = self.pcs_unit_config.get('action', {}).get('consumption_action', {}).get('min')
+            self.consumption_action_max: float = self.pcs_unit_config.get('action', {}).get('consumption_action', {}).get('max')
+            
+            action_space_low = np.array([
+                -energy_config['discharge_rate_max'],  # Charging/Discharging Power
+                self.consumption_action_min,          # Consumption Action
+                self.production_action_min            # Production Action
+            ], dtype=np.float32)
+            
+            action_space_high = np.array([
+                energy_config['charge_rate_max'],     # Charging/Discharging Power
+                self.consumption_action_max,          # Consumption Action
+                self.production_action_max            # Production Action
+            ], dtype=np.float32)
+            
+            self.action_space: spaces.Box = spaces.Box(
+                low=action_space_low,
+                high=action_space_high,
+                shape=(3,),
+                dtype=np.float32
+            )
+            self.logger.info(f"Defined action space with additional actions: low={action_space_low}, high={action_space_high}")
+        
+        else:
+            self.action_space: spaces.Box = spaces.Box(
+                low=-energy_config['discharge_rate_max'], # specifies the maximum rate at which energy can be discharged from the energy storage system per unit time in the environment.
+                high=energy_config['charge_rate_max'], # specifies the maximum rate at which energy can be charged into the energy storage system per unit time in the environment.
+                shape=(1,),
+                dtype=np.float32
+            )
+            self.logger.info(f"Defined action space: low={-energy_config['discharge_rate_max']}, high={energy_config['charge_rate_max']}")
 
         # Define Observation Space
         self.observation_space: spaces.Box = spaces.Box(
@@ -187,6 +167,7 @@ class PCSUnitController():
 
         # Extract other configurations if necessary
         self.pricing_eta: float = self.env_config.get('pricing', {}).get('eta', 0.5)
+        self.time_steps_per_day_ratio: int = self.env_config.get('time', {}).get('time_steps_per_day_ratio', 1440)
         self.time_step_duration: float = self.env_config.get('time', {}).get('step_duration', 5)  # in minutes
         self.max_steps_per_episode: int = self.env_config.get('time', {}).get('max_steps_per_episode', 288)
 
@@ -340,34 +321,55 @@ class PCSUnitController():
         
         # Validate and process the action
         if isinstance(action, np.ndarray):
-            if action.shape != (1,):
+            if self.multi_action and action.shape != (3,):
+                raise ValueError(f"Action numpy array must have shape (3,), but got shape {action.shape}.")
+            elif not self.multi_action and action.shape != (1,):
                 raise ValueError(f"Action numpy array must have shape (1,), but got shape {action.shape}.")
+
             
             # Check if the action is within the action space
             if not self.action_space.contains(action):
                 raise ValueError(f"Action {action} is outside the action space {self.action_space}.")
             
-            # Extract the scalar value from the array
-            action = action.item()
-            self.logger.debug(f"Action extracted from numpy array: {action}")
+            # Extract the scalar values from the array
+            if self.multi_action:
+                battery_action, consumption_action, production_action = action
+                self.logger.debug(f"Actions extracted from numpy array: battery_action={battery_action}, consumption_action={consumption_action}, production_action={production_action}")
+            else:
+                battery_action = action.item()
+                self.logger.debug(f"Action extracted from numpy array: battery_action={battery_action}")
+                consumption_action = None
+                production_action = None
+    
         elif isinstance(action, float):
-            pass  # Action is already a float
+            if self.multi_action:
+                raise TypeError("Expected a numpy array with shape (3,) for multi_action=True.")
+            battery_action = action
+            self.logger.debug(f"Action received as float: battery_action={battery_action}")
+            consumption_action = None
+            production_action = None
         else:
-            raise TypeError(f"Invalid action type: {type(action)}. Action must be a float or a numpy array with shape (1,).")        
+            raise TypeError(f"Invalid action type: {type(action)}. Action must be a float or a numpy array with shape (1,) or (3,).")          
             
-        self.logger.debug(f"Stepping environment with action: {action}")
+        self.logger.debug(f"Stepping environment with actions: battery_action={battery_action}, consumption_action={consumption_action}, production_action={production_action}")
 
         # Increment step counter
         self.count += 1
         self.logger.debug(f"Step count incremented to {self.count}")
 
         # Calculate current time (fraction of day)
-        current_time: float = (self.count * self.time_step_duration) / 1440  # 1440 minutes in a day
+        current_time: float = (self.count * self.time_step_duration) / self.time_steps_per_day_ratio  # 1440 minutes in a day
         self.logger.debug(f"Current time set to {current_time} fraction of day.")
 
-        # Update PCSUnit with current time and action
-        self.PCSUnit.update(time=current_time, battery_action=action)
-        self.logger.debug(f"PCSUnit updated with time: {current_time} and action: {action}")
+        # Update PCSUnit with current time and actions
+        if self.multi_action:
+            self.PCSUnit.update(time=current_time, 
+                                battery_action=battery_action, 
+                                consumption_action=consumption_action, 
+                                production_action=production_action)
+        else:
+            self.PCSUnit.update(time=current_time, battery_action=battery_action)
+        self.logger.debug("PCSUnit updated with current actions.")
 
         # Fetch self-production and self-consumption
         self_production: float = self.PCSUnit.get_self_production()
@@ -383,11 +385,11 @@ class PCSUnitController():
         buy_amount: float = 0.0
         sell_amount: float = 0.0
 
-        if action > 0:
+        if battery_action > 0:
             # Buying to charge the battery
             buy_amount = self.PCSUnit.get_energy_change()
             self.logger.debug(f"Action is charging: buy_amount set to {buy_amount} MW")
-        elif action < 0:
+        elif battery_action < 0:
             # Selling energy from the battery
             sell_amount = abs(self.PCSUnit.get_energy_change())
             self.logger.debug(f"Action is discharging: sell_amount set to {sell_amount} MW")

@@ -2,7 +2,7 @@
 
 import random
 from typing import Callable, Dict
-from energy_net.iso.iso_base import ISOBase
+from energy_net.dynamics.iso.iso_base import ISOBase
 
 
 class RandomPricingISO(ISOBase):

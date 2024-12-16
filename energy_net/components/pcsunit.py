@@ -1,75 +1,119 @@
 # components/pcs_unit.py
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from energy_net.components.storage_devices.battery import Battery
 from energy_net.components.production_devices.production_unit import ProductionUnit
 from energy_net.components.consumption_devices.consumption_unit import ConsumptionUnit
 from energy_net.dynamics.energy_dynamcis import EnergyDynamics
-
+from energy_net.components.grid_entity import CompositeGridEntity
 from energy_net.utils.logger import setup_logger  # Import the logger setup
 from energy_net.utils.utils import dict_level_alingment
 
-class PCSUnit:
+class PCSUnit(CompositeGridEntity):
     """
     Power Conversion System Unit (PCSUnit) managing Battery, ProductionUnit, and ConsumptionUnit.
 
     This class integrates the battery, production, and consumption components, allowing for
     coordinated updates and state management within the smart grid simulation.
+    Inherits from CompositeGridEntity to manage its sub-entities.
     """
 
-    def __init__(
-        self,
-        battery_dynamics: EnergyDynamics,
-        production_dynamics: EnergyDynamics,
-        consumption_dynamics: EnergyDynamics,
-        config: Dict[str, Any],
-        log_file: Optional[str] = 'logs/pcs_unit.log'  # Path to the PCSUnit log file
-    ):
+    def __init__(self, config: Dict[str, Any], log_file: Optional[str] = 'logs/pcs_unit.log'):
         """
-        Initializes the PCSUnit with its components and configuration.
+        Initializes the PCSUnit with its sub-entities based on the provided configuration.
 
         Args:
-            battery_dynamics (EnergyDynamics): Dynamics defining the battery's behavior.
-            production_dynamics (EnergyDynamics): Dynamics defining the production unit's behavior.
-            consumption_dynamics (EnergyDynamics): Dynamics defining the consumption unit's behavior.
             config (Dict[str, Any]): Configuration parameters for the PCSUnit components.
             log_file (str, optional): Path to the PCSUnit log file.
         """
-        # Set up logger
-        self.logger = setup_logger('PCSUnit', log_file)
-        self.logger.info("Initializing PCSUnit.")
+        # Initialize sub-entities
+        sub_entities: List[Battery | ProductionUnit | ConsumptionUnit] = []
 
         # Initialize Battery
-        self.battery = Battery(dynamics=battery_dynamics, config=dict_level_alingment(config, 'battery', 'model_parameters'))
-        self.logger.info(f"Initialized Battery with energy level: {self.battery.energy_level} MWh")
+        battery_config = config.get('battery', {})
+        battery_dynamics_type = battery_config.get('dynamic_type', 'model_based')
+        if battery_dynamics_type == 'model_based':
+            battery_model_type = battery_config.get('model_type', 'deterministic_battery')
+            if battery_model_type == 'deterministic_battery':
+                from energy_net.dynamics.storage_dynamics.deterministic_battery import DeterministicBattery
+
+                battery_dynamics: EnergyDynamics = DeterministicBattery(
+                    model_parameters=battery_config.get('model_parameters', {})
+                )
+            else:
+                raise ValueError(f"Unsupported battery model type: {battery_model_type}")
+        elif battery_dynamics_type == 'data_driven':
+            from energy_net.dynamics.energy_dynamcis import DataDrivenDynamics
+
+            battery_dynamics: EnergyDynamics = DataDrivenDynamics(
+                data_file=battery_config.get('data_file', 'battery_data.csv'),
+                value_column=battery_config.get('value_column', 'battery_value')
+            )
+        else:
+            raise ValueError(f"Unsupported battery dynamic type: {battery_dynamics_type}")
+
+        battery = Battery(dynamics=battery_dynamics, config=battery_config.get('model_parameters', {}), log_file=log_file)
+        sub_entities.append(battery)
+        self.battery = battery
 
         # Initialize ProductionUnit
-        self.production_unit = ProductionUnit(dynamics=production_dynamics, config=dict_level_alingment(config, 'production_unit', 'model_parameters'))
-        self.logger.info(f"Initialized ProductionUnit with current production: {self.production_unit.get_state()} MWh")
+        production_config = config.get('production_unit', {})
+        production_dynamics_type = production_config.get('dynamic_type', 'model_based')
+        if production_dynamics_type == 'model_based':
+            production_model_type = production_config.get('model_type', 'deterministic_production')
+            if production_model_type == 'deterministic_production':
+                from energy_net.dynamics.production_dynamics.deterministic_production import DeterministicProduction
+
+                production_dynamics: EnergyDynamics = DeterministicProduction(
+                    model_parameters=production_config.get('model_parameters', {})
+                )
+            else:
+                raise ValueError(f"Unsupported production_unit model type: {production_model_type}")
+        elif production_dynamics_type == 'data_driven':
+            from energy_net.dynamics.energy_dynamcis import DataDrivenDynamics
+
+            production_dynamics: EnergyDynamics = DataDrivenDynamics(
+                data_file=production_config.get('data_file', 'production_data.csv'),
+                value_column=production_config.get('value_column', 'production_value')
+            )
+        else:
+            raise ValueError(f"Unsupported production_unit dynamic type: {production_dynamics_type}")
+
+        production_unit = ProductionUnit(dynamics=production_dynamics, config=production_config.get('model_parameters', {}),  log_file=log_file)
+        sub_entities.append(production_unit)
+        self.production_unit = production_unit
 
         # Initialize ConsumptionUnit
-        self.consumption_unit = ConsumptionUnit(dynamics=consumption_dynamics, config=dict_level_alingment(config, 'consumption_unit', 'model_parameters'))
-        self.logger.info(f"Initialized ConsumptionUnit with current consumption: {self.consumption_unit.get_state()} MWh")
+        consumption_config = config.get('consumption_unit', {})
+        consumption_dynamics_type = consumption_config.get('dynamic_type', 'model_based')
+        if consumption_dynamics_type == 'model_based':
+            consumption_model_type = consumption_config.get('model_type', 'deterministic_consumption')
+            if consumption_model_type == 'deterministic_consumption':
+                from energy_net.dynamics.consumption_dynamics.deterministic_consumption import DeterministicConsumption
 
-    def reset(self) -> None:
-        """
-        Resets all components to their initial states.
-        """
-        self.logger.info("Resetting PCSUnit components.")
-        # Reset Battery
-        self.battery.reset()
-        self.logger.debug(f"Battery reset to energy level: {self.battery.energy_level} MWh")
+                consumption_dynamics: EnergyDynamics = DeterministicConsumption(
+                    model_parameters=consumption_config.get('model_parameters', {})
+                )
+            else:
+                raise ValueError(f"Unsupported consumption_unit model type: {consumption_model_type}")
+        elif consumption_dynamics_type == 'data_driven':
+            from energy_net.dynamics.energy_dynamcis import DataDrivenDynamics
 
-        # Reset ProductionUnit
-        self.production_unit.reset()
-        self.logger.debug(f"ProductionUnit reset to production: {self.production_unit.get_state()} MWh")
+            consumption_dynamics: EnergyDynamics = DataDrivenDynamics(
+                data_file=consumption_config.get('data_file', 'consumption_data.csv'),
+                value_column=consumption_config.get('value_column', 'consumption_value')
+            )
+        else:
+            raise ValueError(f"Unsupported consumption_unit dynamic type: {consumption_dynamics_type}")
 
-        # Reset ConsumptionUnit
-        self.consumption_unit.reset()
-        self.logger.debug(f"ConsumptionUnit reset to consumption: {self.consumption_unit.get_state()} MWh")
-
-    def update(self, time: float, battery_action: float) -> None:
+        consumption_unit = ConsumptionUnit(dynamics=consumption_dynamics, config=consumption_config.get('model_parameters', {}),  log_file=log_file)
+        sub_entities.append(consumption_unit)
+        self.consumption_unit = consumption_unit
+        # Initialize the CompositeGridEntity with sub-entities
+        super().__init__(sub_entities=sub_entities, log_file=log_file)
+        
+    def update(self, time: float, battery_action: float, consumption_action: float = None, production_action: float = None) -> None:
         """
         Updates the state of all components based on the current time and battery action.
 
@@ -84,42 +128,62 @@ class PCSUnit:
         self.logger.debug(f"Battery updated to energy level: {self.battery.get_state()} MWh")
         
 
-        # Update ProductionUnit (no action required)
-        self.production_unit.update(time=time, action=0.0)
+        # Update ProductionUnit 
+        self.production_unit.update(time=time, action=consumption_action)
         self.logger.debug(f"ProductionUnit updated to production: {self.production_unit.get_state()} MWh")
 
-        # Update ConsumptionUnit (no action required)
-        self.consumption_unit.update(time=time, action=0.0)
+        # Update ConsumptionUnit 
+        self.consumption_unit.update(time=time, action=production_action)
         self.logger.debug(f"ConsumptionUnit updated to consumption: {self.consumption_unit.get_state()} MWh")
 
+        
     def get_self_production(self) -> float:
         """
-        Retrieves the current self-production value.
+        Retrieves the current self-production value from the ProductionUnit.
 
         Returns:
             float: Current production in MWh.
         """
-        production = self.production_unit.get_state()
-        self.logger.debug(f"Retrieved self-production: {production} MWh")
-        return production
+        # Assuming the identifier for ProductionUnit is 'ProductionUnit_1' or similar
+        production_unit = next((entity for key, entity in self.sub_entities.items()
+                                if isinstance(entity, ProductionUnit)), None)
+        if production_unit:
+            self.logger.debug(f"Retrieving self-production: {production_unit.get_state()} MWh")
+            return production_unit.get_state()
+        else:
+            self.logger.error("ProductionUnit not found in PCSUnit sub-entities.")
+            return 0.0
 
     def get_self_consumption(self) -> float:
         """
-        Retrieves the current self-consumption value.
+        Retrieves the current self-consumption value from the ConsumptionUnit.
 
         Returns:
             float: Current consumption in MWh.
         """
-        consumption = self.consumption_unit.get_state()
-        self.logger.debug(f"Retrieved self-consumption: {consumption} MWh")
-        return consumption
+        # Assuming the identifier for ConsumptionUnit is 'ConsumptionUnit_2' or similar
+        consumption_unit = next((entity for key, entity in self.sub_entities.items()
+                                 if isinstance(entity, ConsumptionUnit)), None)
+        if consumption_unit:
+            self.logger.debug(f"Retrieving self-consumption: {consumption_unit.get_state()} MWh")
+            return consumption_unit.get_state()
+        else:
+            self.logger.error("ConsumptionUnit not found in PCSUnit sub-entities.")
+            return 0.0
     
     def get_energy_change(self) -> float:
         """
-        Retrieves the energy change in the battery.
+        Retrieves the energy change from the Battery.
 
         Returns:
             float: Energy change in MWh.
         """
-        self.logger.debug(f"Retrieving energy change: {self.battery.energy_change} MWh")
-        return self.battery.energy_change
+        # Assuming the identifier for Battery is 'Battery_0' or similar
+        battery = next((entity for key, entity in self.sub_entities.items()
+                        if isinstance(entity, Battery)), None)
+        if battery:
+            self.logger.debug(f"Retrieving energy change: {battery.energy_change} MWh")
+            return battery.energy_change
+        else:
+            self.logger.error("Battery not found in PCSUnit sub-entities.")
+            return 0.0
