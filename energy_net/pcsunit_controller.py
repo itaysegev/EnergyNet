@@ -442,7 +442,6 @@ class PCSUnitController():
         self.logger.debug(f"Updated running average price: {self.avg_price}")
 
         # Update info dictionary
-        info: Dict[str, float] = self._get_info()
         self.logger.debug(f"Info after step: {info}")
 
         # Determine if the episode is done
