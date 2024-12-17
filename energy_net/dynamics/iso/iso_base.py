@@ -19,7 +19,7 @@ class ISOBase(ABC):
         pass
 
     @abstractmethod
-    def get_pricing_function(self, observation: Dict) -> Callable[[float, float], float]:
+    def get_pricing_function(self, observation: Dict) -> Callable[[float], float]:
         """
         Returns a pricing function based on the current observation.
         The pricing function calculates the reward given buy and sell amounts.
