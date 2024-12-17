@@ -21,12 +21,12 @@ class QuadraticPricingISO(ISOBase):
     def reset(self) -> None:
         pass
 
-    def get_pricing_function(self, observation: Dict) -> Callable[[float, float], float]:
+    def get_pricing_function(self, observation: Dict) -> Callable[[float], float]:
         demand = observation.get('demand', 1.0)
-        price_buy = self.a * (demand ** 2) + self.b * demand + self.c
-        price_sell = price_buy * 0.85
+        price = self.a * (demand ** 2) + self.b * demand + self.c
+        
 
-        def pricing(buy: float, sell: float) -> float:
-            return (buy * price_buy) - (sell * price_sell)
+        def pricing(buy: float) -> float:
+            return (buy * price) 
 
         return pricing

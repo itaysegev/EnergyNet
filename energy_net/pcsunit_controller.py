@@ -358,14 +358,14 @@ class PCSUnitController():
         self.logger.debug(f"Step count incremented to {self.count}")
 
         # Calculate current time (fraction of day)
-        current_time: float = (self.count * self.time_step_duration) / self.time_steps_per_day_ratio  # 1440 minutes in a day
+        current_time: float = (self.count * self.time_step_duration) / self.time_steps_per_day_ratio
         self.logger.debug(f"Current time set to {current_time} fraction of day.")
 
         # Update PCSUnit with current time and actions
         if self.multi_action:
-            self.PCSUnit.update(time=current_time, 
-                                battery_action=battery_action, 
-                                consumption_action=consumption_action, 
+            self.PCSUnit.update(time=current_time,
+                                battery_action=battery_action,
+                                consumption_action=consumption_action,
                                 production_action=production_action)
         else:
             self.PCSUnit.update(time=current_time, battery_action=battery_action)
@@ -376,64 +376,70 @@ class PCSUnitController():
         self_consumption: float = self.PCSUnit.get_self_consumption()
         self.logger.debug(f"Self-production: {self_production}, Self-consumption: {self_consumption}")
 
-        # Determine buy and sell amounts based on production and consumption
-        excess_production: float = max(0.0, self_production - self_consumption)
-        deficit_consumption: float = max(0.0, self_consumption - self_production)
-        self.logger.debug(f"Excess production: {excess_production}, Deficit consumption: {deficit_consumption}")
-
-        # Calculate buy and sell amounts
-        buy_amount: float = 0.0
-        sell_amount: float = 0.0
-
+        # Determine how battery action affects net exchange
         if battery_action > 0:
-            # Buying to charge the battery
-            buy_amount = self.PCSUnit.get_energy_change()
-            self.logger.debug(f"Action is charging: buy_amount set to {buy_amount} MW")
+            # Charging the battery uses energy, treated as additional consumption
+            battery_charge = battery_action
+            battery_discharge = 0.0
+            # Net exchange = consumption (including battery charge) - production
+            net_exchange = (self_consumption + battery_charge) - self_production
         elif battery_action < 0:
-            # Selling energy from the battery
-            sell_amount = abs(self.PCSUnit.get_energy_change())
-            self.logger.debug(f"Action is discharging: sell_amount set to {sell_amount} MW")
+            # Discharging the battery provides additional supply
+            battery_discharge = abs(battery_action)
+            battery_charge = 0.0
+            # Net exchange = consumption - (production + battery discharge)
+            net_exchange = self_consumption - (self_production + battery_discharge)
+        else:
+            # No battery change
+            battery_charge = 0.0
+            battery_discharge = 0.0
+            net_exchange = self_consumption - self_production
 
-        # Adjust buy and sell amounts based on production and consumption
-        buy_amount += deficit_consumption  # Must buy to cover consumption deficit
-        sell_amount += excess_production   # Can sell excess production
-        self.logger.debug(f"Adjusted buy_amount: {buy_amount} MW, Adjusted sell_amount: {sell_amount} MW")
+        self.logger.debug(f"Net exchange with grid: {net_exchange} (Positive=Buy, Negative=Sell)")
 
         # Prepare observation dictionary for ISO
         observation_dict: Dict[str, Any] = {
             'energy_level': self.energy_lvl,
-            'current_price': None,  # To be determined by ISO's pricing function
+            'current_price': None,
             'time': current_time,
             'self_production': self_production,
             'self_consumption': self_consumption
         }
 
-        # Get pricing function from ISO
+        # Get pricing function from ISO (one price now)
         pricing_function = self.ISO.get_pricing_function(observation_dict)
         self.logger.debug("Retrieved pricing function from ISO.")
-        
+
+
+        price = pricing_function(1)
+        self.logger.debug(f"Single price retrieved: {price} $/MWh")
+
+        # Info dictionary
         info: Dict[str, Any] = {
-            'buy_amount': buy_amount,
-            'sell_amount': sell_amount,
-            'pricing_function': pricing_function,  # Add pricing function to info
+            'net_exchange': net_exchange,
+            'price': price,
+            'pricing_function': pricing_function,
             # Add more info as needed for reward computation
         }
         self.logger.debug(f"Info for reward computation: {info}")
 
-        # Calculate reward 
+        # Compute reward using cost_reward logic
+        # Reward is negative of cost: cost = net_exchange * price
+        # If net_exchange > 0 (buy), cost >0 => reward negative
+        # If net_exchange < 0 (sell), cost <0 => reward positive
         reward: float = self.reward.compute_reward(info)
-        self.logger.debug(f"Calculated reward: {reward} based on buy_amount: {buy_amount} and sell_amount: {sell_amount}")
+        self.logger.debug(f"Calculated reward: {reward} based on net_exchange: {net_exchange}")
 
         # Update energy level from PCSUnit's battery state
         self.energy_lvl = self.PCSUnit.battery.get_state()
         self.logger.debug(f"Updated energy level: {self.energy_lvl} MWh")
 
         # Update running average price
-        # Avoid division by zero
-        total_transactions: float = buy_amount + sell_amount
+        total_transactions = abs(net_exchange)  # total energy transacted with the grid
         if total_transactions > 0:
-            avg_transaction_price: float = reward / total_transactions
-            self.logger.debug(f"Average transaction price calculated: {avg_transaction_price}")
+            avg_transaction_price: float = (price * net_exchange) / total_transactions
+            # avg_transaction_price might represent cost per MWh (could refine logic if needed)
+            self.logger.debug(f"Average transaction price: {avg_transaction_price}")
         else:
             avg_transaction_price = 0.0
             self.logger.debug("No transactions occurred; average transaction price set to 0.0")
@@ -441,16 +447,12 @@ class PCSUnitController():
         self.avg_price = (1.0 - self.pricing_eta) * self.avg_price + self.pricing_eta * avg_transaction_price
         self.logger.debug(f"Updated running average price: {self.avg_price}")
 
-        # Update info dictionary
-        self.logger.debug(f"Info after step: {info}")
-
         # Determine if the episode is done
         done: bool = self.count >= self.max_steps_per_episode
         self.logger.debug(f"Episode done status: {done}")
 
-        # Split 'done' into 'terminated' and 'truncated'
-        terminated: bool = done  # Here, 'done' is considered as 'terminated'
-        truncated: bool = False    # No truncation criteria implemented
+        terminated: bool = done
+        truncated: bool = False
 
         # Create next observation
         observation: np.ndarray = np.array([

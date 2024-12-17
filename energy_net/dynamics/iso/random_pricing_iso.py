@@ -14,11 +14,11 @@ class RandomPricingISO(ISOBase):
     def reset(self) -> None:
         pass
 
-    def get_pricing_function(self, observation: Dict) -> Callable[[float, float], float]:
-        price_buy = random.uniform(self.min_price, self.max_price)
-        price_sell = price_buy * random.uniform(0.8, 0.95)
+    def get_pricing_function(self, observation: Dict) -> Callable[[float], float]:
+        price = random.uniform(self.min_price, self.max_price)
+        
 
-        def pricing(buy: float, sell: float) -> float:
-            return (buy * price_buy) - (sell * price_sell)
+        def pricing(buy: float) -> float:
+            return buy * price
 
         return pricing

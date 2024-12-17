@@ -19,16 +19,15 @@ class CostReward(BaseReward):
         Computes the reward as the negative net cost.
 
         Args:
-            info (Dict[str, Any]): Contains 'buy_amount' and 'sell_amount'.
+            info (Dict[str, Any]): Contains 'net_exchange' and 'pricing_function'.
 
         Returns:
             float: Negative net cost.
         """
-        buy_amount = info.get('buy_amount', 0.0)
-        sell_amount = info.get('sell_amount', 0.0)
+        buy_amount = info.get('net_exchange', 0.0)
         pricing_function = info.get('pricing_function')
         
-        reward = -1 * pricing_function(buy_amount, sell_amount) 
+        reward = -1 * pricing_function(buy_amount) 
         
 
         return reward

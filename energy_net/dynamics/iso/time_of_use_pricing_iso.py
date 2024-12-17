@@ -21,21 +21,21 @@ class TimeOfUsePricingISO(ISOBase):
     def reset(self) -> None:
         pass
 
-    def get_pricing_function(self, observation: Dict) -> Callable[[float, float], float]:
+    def get_pricing_function(self, observation: Dict) -> Callable[[float], float]:
         current_time_fraction = observation.get('time', 0.0)
         current_hour = int(current_time_fraction * 24) % 24
 
         if current_hour in self.peak_hours:
-            price_buy = self.peak_price
-            price_sell = self.peak_price * 0.9
+            price = self.peak_price
+            
         elif current_hour in self.off_peak_hours:
-            price_buy = self.off_peak_price
-            price_sell = self.off_peak_price * 0.9
+            price = self.off_peak_price
+            
         else:
-            price_buy = (self.peak_price + self.off_peak_price) / 2
-            price_sell = price_buy * 0.9
+            price = (self.peak_price + self.off_peak_price) / 2
+            
 
-        def pricing(buy: float, sell: float) -> float:
-            return (buy * price_buy) - (sell * price_sell)
+        def pricing(buy: float) -> float:
+            return buy * price
 
         return pricing
