@@ -26,13 +26,13 @@ consumption_unit:
   dynamic_type: "model_based"              # Options: "model_based", "data_driven"
   model_type: "deterministic_consumption"  # Specify the concrete model type
   model_parameters:
-    consumption_capacity: 45.0             # Consumption capacity (MWh)
-    peak_consumption1: 20.0                 # First peak consumption (MWh)
+    consumption_capacity: 200.0            # Consumption capacity (MWh)
+    peak_consumption1: 100.0                # First peak consumption (MWh)
     peak_time1: 0.4                          # First peak at midday (fraction of day)
     width1: 0.05                             # Width of the first peak
-    peak_consumption2: 25.0                 # Second peak consumption (MWh)
+    peak_consumption2: 120.0                 # Second peak consumption (MWh)
     peak_time2: 0.7                          # Second peak in the evening (fraction of day)
-    width2: 0.05                             # Width of the second peak
+    width2: 0.1                             # Width of the second peak
 
 
 action:
